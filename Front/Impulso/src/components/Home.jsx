@@ -2,29 +2,23 @@ import Icon from "./icon";
 import Header from "../components/Header";
 import photo from "../data/photo";
 import classes from "../data/classes";
-function Home({ setPage }) {
+import { currentDay } from "../utils/date.now";
+
+function Home({ setPage, user }) {
   return (
     <>
-      <Header eyebrow="LUNES 12 DE AGOSTO" title="Buenos días, Juliana." />
+      <Header eyebrow={currentDay().eyebrowText} title={`${user.name}`} />
 
-      <section className="hero-card">
-        <div className="hero-content">
-          <div className="hero-eyebrow">TU PROGRESO</div>
-          <h2>Entrená con intención.</h2>
-          <p>
-            Hoy tenés una sesión programada. Mantené la constancia y seguí
-            construyendo tu mejor versión.
-          </p>
-
-          <button className="primary-button" onClick={() => setPage("rutina")}>
-            Ver mi rutina
-            <Icon name="arrow" size={17} />
-          </button>
-        </div>
-
-        <div className="hero-image">
-          <img src={photo} alt="Entrenamiento" />
-        </div>
+        <section className="hero">
+          <img src={photo} alt="Atleta entrenando fuerza en el gimnasio" />
+          <div className="hero-overlay" />
+          <div className="hero-content">
+            <span className="hero-kicker"><span /> ENERGÍA PARA SUPERARTE</span>
+            <h2>Tu mejor versión<br />empieza hoy.</h2>
+            <p>Continuá tu progreso. Cada entrenamiento cuenta.</p>
+            <button className="primary-button" onClick={() => setPage("rutina")}>Ver entrenamiento <Icon name="arrow" size={18} /></button>
+          </div>
+          <div className="streak"><strong>8</strong><span>días de<br />constancia</span></div>
       </section>
 
       <div className="stats-grid">
