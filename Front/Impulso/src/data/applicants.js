@@ -1,4 +1,4 @@
-const applicants = [
+const professorApplicants = [
   {
     id: 1,
     name: "Martín López",
@@ -21,4 +21,4 @@ const applicants = [
     status: "PENDIENTE",
   },
 ];
-export default applicants;
+export default professorApplicants;

@@ -1,49 +1,86 @@
 import Icon from "./icon";
 import Header from "../components/Header";
 
-function Profile() {
+function Profile({ user, onLogout }) {
   return (
     <>
-      <Header eyebrow="CUENTA" title="Mi perfil" />
-
-      <section className="profile-card">
-        <div className="profile-header">
-          <div className="avatar large">JP</div>
-
-          <div>
-            <h2>Juliana Pérez</h2>
-            <p>Socio desde marzo 2026</p>
-          </div>
-
-          <button className="secondary-button">
-            <Icon name="edit" size={17} />
-            Editar perfil
-          </button>
+      <Header eyebrow="TU CUENTA" title="Mi perfil" />
+      <div className="profile-hero">
+        <div className="avatar avatar-large">LM</div>
+        <div>
+          <h2>{user.name}</h2>
+          <p>Socio desde {user.creado_en}</p>
+          <span className="status-pill">
+            <i /> Cuenta activa
+          </span>
         </div>
-
-        <div className="profile-details">
-          <div>
-            <span>EMAIL</span>
-            <strong>juliana@email.com</strong>
+        <button className="outline-button">Editar perfil</button>
+      </div>
+      <div className="profile-layout">
+        <section className="profile-section">
+          <span className="eyebrow">INFORMACIÓN PERSONAL</span>
+          <div className="info-grid">
+            <div>
+              <span>Nombre completo</span>
+              <strong>{user.name}</strong>
+            </div>
+            <div>
+              <span>DNI</span>
+              <strong>{user.dni}</strong>
+            </div>
+            <div>
+              <span>Correo electrónico</span>
+              <strong>{user.email}</strong>
+            </div>
+            <div>
+              <span>Teléfono</span>
+              <strong>{user.phone}</strong>
+            </div>
           </div>
-
-          <div>
-            <span>TELÉFONO</span>
-            <strong>+54 341 555 0192</strong>
+        </section>
+        <aside className="plan-panel">
+          <div className="plan-icon">
+            <Icon name="user" />
           </div>
-
-          <div>
-            <span>PROFESOR</span>
-            <strong>Sin profesor asignado</strong>
-          </div>
-
-          <div>
-            <span>ESPECIALIDAD BUSCADA</span>
-            <strong>—</strong>
-          </div>
-        </div>
-      </section>
+          <span className="eyebrow">TU PROFESOR</span>
+          <h3>Sin profesor asignado</h3>
+          <p>Elegí un profesor desde el menú Profesores.</p>
+        </aside>
+      </div>
+      <div className="settings-list">
+        <button>
+          <span className="setting-icon">
+            <Icon name="bell" />
+          </span>
+          <span>
+            <strong>Notificaciones</strong>
+            <small>Recordatorios y mensajes</small>
+          </span>
+          <Icon name="arrow" />
+        </button>
+        <button>
+          <span className="setting-icon">
+            <Icon name="settings" />
+          </span>
+          <span>
+            <strong>Preferencias</strong>
+            <small>Privacidad y configuración de la cuenta</small>
+          </span>
+          <Icon name="arrow" />
+        </button>
+        <button className="danger" onClick={onLogout}>
+          <span className="setting-icon">
+            <Icon name="logout" />
+          </span>
+          <span>
+            <strong>Cerrar sesión</strong>
+            <small>Salir de tu cuenta de Impulso</small>
+          </span>
+          <Icon name="arrow" />
+        </button>
+      </div>
     </>
   );
 }
+
 export default Profile;

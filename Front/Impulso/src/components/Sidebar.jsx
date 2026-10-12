@@ -2,7 +2,9 @@ import navigation from "../data/navigation";
 import Icon from "./icon";
 import adminNavigation from "../data/adminNavigation";
 
-function Sidebar({ page, setPage }) {
+
+function Sidebar({ page, setPage, user, onLogout}) {
+
   return (
     <aside className="sidebar">
       <div className="brand">
@@ -16,7 +18,6 @@ function Sidebar({ page, setPage }) {
       </div>
 
       <nav className="sidebar-nav">
-        <div className="nav-section">MENÚ</div>
 
         {navigation.map((item) => (
           <button
@@ -29,7 +30,6 @@ function Sidebar({ page, setPage }) {
           </button>
         ))}
 
-        <div className="nav-section admin-label">GESTIÓN</div>
 
         {adminNavigation.map((item) => (
           <button
@@ -44,23 +44,19 @@ function Sidebar({ page, setPage }) {
       </nav>
 
       <div className="sidebar-bottom">
-        <button className="nav-item">
-          <Icon name="settings" size={19} />
-          <span>Configuración</span>
-        </button>
 
-        <button className="nav-item">
+        <button className="nav-item" onClick={onLogout}>
           <Icon name="logout" size={19} />
           <span>Cerrar sesión</span>
         </button>
 
-        <div className="profile-mini">
+        <button className="profile-mini" onClick={()=> setPage('Profile')}>
           <div className="avatar">JP</div>
           <div>
-            <div className="profile-name">Juliana Pérez</div>
+            <div className="profile-name">{user.name}</div>
             <div className="profile-role">Socio activo</div>
           </div>
-        </div>
+        </button>
       </div>
     </aside>
   );
