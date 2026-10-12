@@ -3,9 +3,10 @@ import { useEffect, useState } from "react";
 
 import Sidebar from "./components/Sidebar";
 import Admin from "./components/Admin";
-import Classes from "./components/Classes";
+import Profesores from "./components/Profesores";
 import Home from "./components/Home";
 import Professor from "./components/Professor";
+import PostularProfesor from "./components/PostularProfesor";
 import Profile from "./components/Profile";
 import Routine from "./components/Routine";
 import AuthLayout from "./components/auth/AuthLayout";
@@ -98,14 +99,18 @@ export default function App() {
       case "inicio":
         return <Home setPage={setPage} user={user}/>;
 
-      case "clases":
-        return <Classes />;
+      case "profesores":
+        return <Profesores />;
 
       case "rutina":
         return <Routine />;
 
       case "profesor":
-        return <Professor user={user} />;
+        return user.rol === "profesor" ? (
+          <Professor user={user} />
+        ) : (
+          <PostularProfesor />
+        );
 
       case "admin":
         return <Admin />;
