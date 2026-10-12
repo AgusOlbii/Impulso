@@ -6,7 +6,7 @@ import Admin from "./components/Admin";
 import Profesores from "./components/Profesores";
 import Home from "./components/Home";
 import Professor from "./components/Professor";
-import ProfessorPanel from "./components/ProfessorPanel";
+import PostularProfesor from "./components/PostularProfesor";
 import Profile from "./components/Profile";
 import Routine from "./components/Routine";
 import AuthLayout from "./components/auth/AuthLayout";
@@ -107,9 +107,9 @@ export default function App() {
 
       case "profesor":
         return user.rol === "profesor" ? (
-          <ProfessorPanel user={user} />
+          <Professor user={user} />
         ) : (
-          <Professor />
+          <PostularProfesor />
         );
 
       case "admin":
