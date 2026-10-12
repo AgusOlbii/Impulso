@@ -2,71 +2,39 @@ import { useState } from "react";
 import Header from "../components/Header";
 import classes from "../data/classes";
 import Icon from "./icon";
+
+
 function Classes() {
-  const [selectedDay, setSelectedDay] = useState("12");
-
-  const days = [
-    { day: "LUN", date: "12" },
-    { day: "MAR", date: "13" },
-    { day: "MIÉ", date: "14" },
-    { day: "JUE", date: "15" },
-    { day: "VIE", date: "16" },
-    { day: "SÁB", date: "17" },
-  ];
-
+  const [booked, setBooked] = useState(["Cross Training"]);
   return (
     <>
-      <Header eyebrow="AGENDA" title="Clases" />
-
-      <section className="section">
-        <div className="days">
-          {days.map((item) => (
-            <button
-              key={item.date}
-              className={`day ${selectedDay === item.date ? "active" : ""}`}
-              onClick={() => setSelectedDay(item.date)}
-            >
-              <span>{item.day}</span>
-              <strong>{item.date}</strong>
-            </button>
-          ))}
-        </div>
-
-        <div className="classes-list large">
-          {classes.map((item) => (
-            <div className="class-row" key={item.time}>
-              <div className="class-time">{item.time}</div>
-
-              <div className="class-main">
-                <span className="tag">{item.type}</span>
-                <h3>{item.name}</h3>
-                <p>{item.coach}</p>
-              </div>
-
-              <div className="class-duration">
-                <Icon name="clock" size={16} />
-                {item.duration}
-              </div>
-
-              <div className="class-spots">
-                <span>{item.spots}</span>
-                <small>cupos</small>
-              </div>
-
-              <button
-                className={
-                  item.booked
-                    ? "secondary-button booked-button"
-                    : "primary-button small"
-                }
-              >
-                {item.booked ? "Reservada" : "Reservar"}
+      <Header eyebrow="RESERVÁ TU LUGAR" title="Clases" />
+      <div className="page-intro"><div><h2>Encontrá tu próxima clase</h2><p>Elegí una actividad y seguí sumando movimiento.</p></div><button className="search-button"><Icon name="search" /> Buscar clase</button></div>
+      <div className="date-strip">
+        {["LUN|17", "MAR|18", "MIÉ|19", "JUE|20", "VIE|21", "SÁB|22", "DOM|23"].map((date) => {
+          const [day, number] = date.split("|");
+          return <button key={date} className={number === "18" ? "selected" : ""}><span>{day}</span><strong>{number}</strong>{number === "18" && <i />}</button>;
+        })}
+      </div>
+      <div className="filter-row"><button className="filter active">Todas</button><button className="filter">Fuerza</button><button className="filter">Cardio</button><button className="filter">Funcional</button></div>
+      <div className="class-list">
+        {classes.map((item) => {
+          const isBooked = booked.includes(item.name);
+          return (
+            <article className="class-row" key={item.name}>
+              <div className="class-time"><strong>{item.time}</strong><span>{item.duration}</span></div>
+              <div className="class-line" />
+              <div className="class-main"><span className="tag">{item.type}</span><h3>{item.name}</h3><p>{item.coach}</p></div>
+              <div className="spots"><Icon name="users" size={18} /><span><strong>{item.spots}</strong> cupos</span></div>
+              <button className={isBooked ? "book-button booked" : "book-button"} onClick={() => setBooked(isBooked ? booked.filter((name) => name !== item.name) : [...booked, item.name])}>
+                {isBooked ? <><Icon name="check" size={17} /> Reservada</> : "Reservar"}
               </button>
-            </div>
-          ))}
-        </div>
-      </section>
+            </article>
+          );
+        })}
+      </div>
     </>
   );
 }
+
 export default Classes;
