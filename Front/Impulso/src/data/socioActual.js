@@ -1,10 +1,7 @@
-const sociosActual = 
-    {
-        id: 1,
-        name: 'Nicolas',
-        membresia: 'completa',
-        vencimiento: "2026-11-01"
-    }
+const socioActual = {
+  id: 1,
+  name: "Nicolas",
+  profesorId: null,
+};
 
-
-export default sociosActual;
+export default socioActual;

@@ -1,111 +1,120 @@
 import { useState } from "react";
-import Icon from "./icon";
 import Header from "../components/Header";
+
 function Professor() {
-  const [submitted, setSubmitted] = useState(false);
+  const [nombre, setNombre] = useState("");
+  const [email, setEmail] = useState("");
+  const [especialidad, setEspecialidad] = useState("");
+  const [experiencia, setExperiencia] = useState("");
+  const [descripcion, setDescripcion] = useState("");
+  const [enviado, setEnviado] = useState(false);
+  const [error, setError] = useState("");
+
+  const enviarFormulario = (e) => {
+    e.preventDefault();
+
+    if (!nombre || !email || !especialidad || !experiencia || !descripcion) {
+      setError("Completá todos los campos.");
+      return;
+    }
+
+    const solicitud = {
+      nombre,
+      email,
+      especialidad,
+      experiencia,
+      descripcion,
+      estado: "pendiente",
+    };
+
+    console.log("Solicitud de profesor:", solicitud);
+    setError("");
+    setEnviado(true);
+  };
 
   return (
     <>
       <Header eyebrow="COMUNIDAD" title="Soy profesor" />
 
-      <div className="professor-layout">
-        <section className="form-card">
-          {!submitted ? (
-            <>
-              <div className="eyebrow">SUMATE A FITLAB</div>
-              <h2>Convertite en profesor</h2>
-              <p>
-                Completá tus datos y nuestro equipo revisará tu perfil antes de
-                habilitarte.
-              </p>
+      <section className="form-card">
+        {enviado ? (
+          <div>
+            <h2>Solicitud enviada</h2>
+            <p>
+              Gracias {nombre}. Vamos a revisar tus datos y te avisamos por
+              email.
+            </p>
+          </div>
+        ) : (
+          <form onSubmit={enviarFormulario}>
+            <h2>Quiero ser profesor</h2>
+            <p>Completá el formulario y el admin va a revisar tu perfil.</p>
 
-              <div className="form-grid">
-                <label>
-                  Nombre completo
-                  <input placeholder="Ej. Martín López" />
-                </label>
+            {error && <p>{error}</p>}
 
-                <label>
-                  Email
-                  <input placeholder="martin@email.com" type="email" />
-                </label>
+            <label>
+              Nombre
+              <input
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                placeholder="Tu nombre"
+              />
+            </label>
 
-                <label>
-                  Especialidad
-                  <select>
-                    <option>Seleccionar</option>
-                    <option>Musculación</option>
-                    <option>Funcional</option>
-                    <option>Spinning</option>
-                    <option>Yoga</option>
-                    <option>Cross Training</option>
-                  </select>
-                </label>
+            <label>
+              Email
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="tu@email.com"
+              />
+            </label>
 
-                <label>
-                  Años de experiencia
-                  <input placeholder="Ej. 4" type="number" />
-                </label>
-
-                <label className="full">
-                  Breve descripción
-                  <textarea
-                    placeholder="Contanos sobre tu experiencia..."
-                    rows="5"
-                  ></textarea>
-                </label>
-              </div>
-
-              <button
-                className="primary-button"
-                onClick={() => setSubmitted(true)}
+            <label>
+              Especialidad
+              <select
+                value={especialidad}
+                onChange={(e) => setEspecialidad(e.target.value)}
               >
-                Enviar solicitud
-                <Icon name="arrow" size={17} />
-              </button>
-            </>
-          ) : (
-            <div className="success-state">
-              <div className="success-icon">
-                <Icon name="check" size={30} />
-              </div>
+                <option value="">Elegí una</option>
+                <option value="Zona media">Zona media</option>
+                <option value="Glúteos">Glúteos</option>
+                <option value="Hipertrofia">Hipertrofia</option>
+                <option value="Resistencia">Resistencia</option>
+                <option value="Movilidad">Movilidad</option>
+              </select>
+            </label>
 
-              <div className="eyebrow">SOLICITUD ENVIADA</div>
-              <h2>¡Gracias por postularte!</h2>
-              <p>
-                Revisaremos tus datos y te enviaremos una respuesta por email
-                cuando finalice el proceso.
-              </p>
-            </div>
-          )}
-        </section>
+            <label>
+              Años de experiencia
+              <input
+                type="number"
+                min="0"
+                value={experiencia}
+                onChange={(e) => setExperiencia(e.target.value)}
+                placeholder="Ej: 3"
+              />
+            </label>
 
-        <aside className="info-card">
-          <div className="eyebrow">¿CÓMO FUNCIONA?</div>
-          <h3>Tu perfil, tus reglas.</h3>
+            <label>
+              Descripción
+              <textarea
+                rows="4"
+                value={descripcion}
+                onChange={(e) => setDescripcion(e.target.value)}
+                placeholder="Contá en qué entrenás y cómo laburás"
+              />
+            </label>
 
-          <div className="info-step">
-            <div>01</div>
-            <span>Completás tu perfil</span>
-          </div>
-
-          <div className="info-step">
-            <div>02</div>
-            <span>Revisamos tu solicitud</span>
-          </div>
-
-          <div className="info-step">
-            <div>03</div>
-            <span>Publicamos tus clases</span>
-          </div>
-
-          <div className="info-step">
-            <div>04</div>
-            <span>Empezás a entrenar</span>
-          </div>
-        </aside>
-      </div>
+            <button className="primary-button" type="submit">
+              Enviar solicitud
+            </button>
+          </form>
+        )}
+      </section>
     </>
   );
 }
+
 export default Professor;

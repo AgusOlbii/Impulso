@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Sidebar from "./components/Sidebar";
 import Admin from "./components/Admin";
-import Classes from "./components/Classes";
+import Profesores from "./components/Profesores";
 import Home from "./components/Home";
 import Professor from "./components/Professor";
 import Profile from "./components/Profile";
@@ -15,8 +15,8 @@ export default function App() {
       case "inicio":
         return <Home setPage={setPage} />;
 
-      case "clases":
-        return <Classes />;
+      case "profesores":
+        return <Profesores />;
 
       case "rutina":
         return <Routine />;

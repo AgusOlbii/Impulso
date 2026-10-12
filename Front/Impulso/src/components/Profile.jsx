@@ -33,13 +33,13 @@ function Profile() {
           </div>
 
           <div>
-            <span>MEMBRESÍA</span>
-            <strong>Plan Premium</strong>
+            <span>PROFESOR</span>
+            <strong>Sin profesor asignado</strong>
           </div>
 
           <div>
-            <span>PRÓXIMO PAGO</span>
-            <strong>12 septiembre 2026</strong>
+            <span>ESPECIALIDAD BUSCADA</span>
+            <strong>—</strong>
           </div>
         </div>
       </section>

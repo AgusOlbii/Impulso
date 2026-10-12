@@ -29,7 +29,7 @@ function Admin() {
         </div>
 
         <div className="admin-stat">
-          <span>CLASES ESTA SEMANA</span>
+          <span>SOCIOS CON PROFESOR</span>
           <strong>42</strong>
         </div>
 
