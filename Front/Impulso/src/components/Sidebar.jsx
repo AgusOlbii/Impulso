@@ -26,7 +26,11 @@ function Sidebar({ page, setPage, user, onLogout}) {
             onClick={() => setPage(item.id)}
           >
             <Icon name={item.icon} size={19} />
-            <span>{item.label}</span>
+            <span>
+              {item.id === "profesor" && user?.rol === "profesor"
+                ? "Profesor"
+                : item.label}
+            </span>
           </button>
         ))}
 

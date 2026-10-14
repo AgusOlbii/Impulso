@@ -4,7 +4,8 @@ import photo from "../data/photo";
 import professors from "../data/professors";
 import { currentDay } from "../utils/date.now";
 
-function Home({ setPage, user }) {
+function Home({ setPage, user, profesorElegidoId }) {
+  const profesor = professors.find((item) => item.id === profesorElegidoId);
   return (
     <>
       <Header
@@ -45,7 +46,9 @@ function Home({ setPage, user }) {
             <Icon name="calendar" size={20} />
           </div>
           <div>
-            <div className="stat-value">—</div>
+            <div className="stat-value">
+              {profesor ? profesor.name.split(" ")[0] : "—"}
+            </div>
             <div className="stat-label">PROFESOR ASIGNADO</div>
           </div>
         </div>
@@ -93,24 +96,28 @@ function Home({ setPage, user }) {
           </button>
         </div>
 
-        <div className="classes-list">
+        <div className="coach-grid">
           {professors
-            .filter((item) => item.status === "approved")
+            .filter((item) => !item.status || item.status === "approved")
             .slice(0, 3)
             .map((item) => (
-              <div className="class-row" key={item.id}>
-                <div className="class-time">
-                  ${item.precio.toLocaleString("es-AR")}
+              <article className="coach-card" key={item.id}>
+                <div className="coach-photo">
+                  <img
+                    src={item.image || item.photo}
+                    alt={item.name}
+                    style={{ objectPosition: item.position || "center 20%" }}
+                  />
+                  <span className="coach-available">
+                    <i /> Disponible
+                  </span>
+                  <span className="coach-specialty">{item.specialty}</span>
                 </div>
-
-                <div className="class-main">
-                  <span className="tag">{item.specialty}</span>
+                <div className="coach-card-body">
                   <h3>{item.name}</h3>
-                  <p>{item.bio}</p>
+                  <p>{item.description || item.bio}</p>
                 </div>
-
-                <div className="class-status available">DISPONIBLE</div>
-              </div>
+              </article>
             ))}
         </div>
       </section>

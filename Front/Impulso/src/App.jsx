@@ -17,6 +17,10 @@ import {
   logout,
   register,
 } from "./services/authServices";
+import {
+  leerProfesorElegido,
+  guardarProfesorElegido,
+} from "./data/eleccionProfesor";
 
 export default function App() {
   const [page, setPage] = useState("inicio");
@@ -24,6 +28,7 @@ export default function App() {
   const [checkingSession, setCheckingSession] = useState(true);
   const [authError, setAuthError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [profesorElegidoId, setProfesorElegidoId] = useState(null);
 
   // Verificar si ya existe una sesión válida.
   useEffect(() => {
@@ -40,6 +45,24 @@ export default function App() {
 
     checkSession();
   }, []);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setProfesorElegidoId(null);
+      return;
+    }
+    setProfesorElegidoId(leerProfesorElegido(user.id));
+  }, [user?.id]);
+
+  const elegirProfesor = (profesorId) => {
+    setProfesorElegidoId(profesorId);
+    guardarProfesorElegido(user.id, profesorId);
+  };
+
+  const dejarProfesor = () => {
+    setProfesorElegidoId(null);
+    guardarProfesorElegido(user.id, null);
+  };
 
   // Iniciar sesión contra el backend.
   async function handleLogin(credentials) {
@@ -97,29 +120,59 @@ export default function App() {
   const renderPage = (user) => {
     switch (page) {
       case "inicio":
-        return <Home setPage={setPage} user={user}/>;
+        return (
+          <Home
+            setPage={setPage}
+            user={user}
+            profesorElegidoId={profesorElegidoId}
+          />
+        );
 
       case "profesores":
-        return <Profesores />;
+        return (
+          <Profesores
+            user={user}
+            profesorElegidoId={profesorElegidoId}
+            onElegir={elegirProfesor}
+            onDejar={dejarProfesor}
+          />
+        );
 
       case "rutina":
-        return <Routine />;
+        return (
+          <Routine
+            setPage={setPage}
+            profesorElegidoId={profesorElegidoId}
+          />
+        );
 
       case "profesor":
         return user.rol === "profesor" ? (
           <Professor user={user} />
         ) : (
-          <PostularProfesor />
+          <PostularProfesor user={user} />
         );
 
       case "admin":
         return <Admin />;
 
       case "Profile":
-        return <Profile user={user} onLogout={handleLogout}/>;
+        return (
+          <Profile
+            user={user}
+            onLogout={handleLogout}
+            profesorElegidoId={profesorElegidoId}
+          />
+        );
 
       default:
-        return <Home setPage={setPage} user={user} />;
+        return (
+          <Home
+            setPage={setPage}
+            user={user}
+            profesorElegidoId={profesorElegidoId}
+          />
+        );
     }
   }; 
 
@@ -148,7 +201,7 @@ export default function App() {
       />
 
       <main className="main-content">
-        <div className="content-container">
+        <div className="content-wrap">
           {renderPage(user)}
         </div>
       </main>

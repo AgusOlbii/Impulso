@@ -1,9 +1,8 @@
 import { useState } from "react";
 import Header from "./Header";
+import Icon from "./icon";
 
-function PostularProfesor() {
-  const [nombre, setNombre] = useState("");
-  const [email, setEmail] = useState("");
+function PostularProfesor({ user }) {
   const [especialidad, setEspecialidad] = useState("");
   const [experiencia, setExperiencia] = useState("");
   const [descripcion, setDescripcion] = useState("");
@@ -13,81 +12,77 @@ function PostularProfesor() {
   const enviarFormulario = (e) => {
     e.preventDefault();
 
-    if (!nombre || !email || !especialidad || !experiencia || !descripcion) {
-      setError("Completá todos los campos.");
+    if (!especialidad || !experiencia || !descripcion) {
+      setError("Completá especialidad, experiencia y descripción.");
       return;
     }
 
     const solicitud = {
-      nombre,
-      email,
+      usuarioId: user?.id,
+      nombre: user?.name,
+      email: user?.email,
       especialidad,
       experiencia,
       descripcion,
       estado: "pendiente",
     };
 
-    console.log("Solicitud de profesor:", solicitud);
+    console.log("Solicitud de profesor (no se envía al servidor):", solicitud);
     setError("");
     setEnviado(true);
   };
 
   return (
     <>
-      <Header eyebrow="COMUNIDAD" title="Soy profesor" />
+      <Header eyebrow="COMUNIDAD" title="Quiero ser profesor" />
 
-      <section className="form-card">
+      <section className="creator-heading">
+        <div>
+          <span className="tag bright">POSTULACIÓN</span>
+          <h2>Sumate al equipo, {user?.name || "socio"}.</h2>
+          <p>
+            Ya tenemos tu nombre y tu email de la cuenta. Completá tu perfil
+            profesional. La solicitud queda registrada acá; no se manda a
+            ningún servidor.
+          </p>
+        </div>
+      </section>
+
+      <section className="apply-card">
         {enviado ? (
-          <div>
-            <h2>Solicitud enviada</h2>
-            <p>
-              Gracias {nombre}. Vamos a revisar tus datos y te avisamos por
-              email.
-            </p>
+          <div className="success-message">
+            <Icon name="check" size={18} />
+            <span>
+              Solicitud lista. Revisamos tu perfil. Te vamos a avisar cuando el
+              admin la vea.
+            </span>
           </div>
         ) : (
-          <form onSubmit={enviarFormulario}>
-            <h2>Quiero ser profesor</h2>
-            <p>Completá el formulario y el admin va a revisar tu perfil.</p>
+          <form className="apply-form" onSubmit={enviarFormulario}>
+            <p className="apply-account">
+              Postulándote como <strong>{user?.name}</strong> · {user?.email}
+            </p>
 
-            {error && <p>{error}</p>}
-
-            <label>
-              Nombre
-              <input
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                placeholder="Tu nombre"
-              />
-            </label>
+            {error && <p className="apply-error">{error}</p>}
 
             <label>
-              Email
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="tu@email.com"
-              />
-            </label>
-
-            <label>
-              Especialidad
+              <span>Especialidad</span>
               <select
                 value={especialidad}
                 onChange={(e) => setEspecialidad(e.target.value)}
               >
                 <option value="">Elegí una</option>
-                <option value="Zona media">Zona media</option>
-                <option value="Glúteos">Glúteos</option>
-                <option value="Hipertrofia">Hipertrofia</option>
-                <option value="Resistencia">Resistencia</option>
+                <option value="Fuerza">Fuerza</option>
+                <option value="Cardio">Cardio</option>
+                <option value="Musculación">Musculación</option>
+                <option value="Funcional">Funcional</option>
+                <option value="Cross Training">Cross Training</option>
                 <option value="Movilidad">Movilidad</option>
               </select>
             </label>
 
             <label>
-              Años de experiencia
+              <span>Años de experiencia</span>
               <input
                 type="number"
                 min="0"
@@ -97,18 +92,19 @@ function PostularProfesor() {
               />
             </label>
 
-            <label>
-              Descripción
+            <label className="apply-full">
+              <span>Breve descripción</span>
               <textarea
                 rows="4"
                 value={descripcion}
                 onChange={(e) => setDescripcion(e.target.value)}
-                placeholder="Contá en qué entrenás y cómo laburás"
+                placeholder="Contá cómo entrenás y a quién te gusta acompañar"
               />
             </label>
 
             <button className="primary-button" type="submit">
               Enviar solicitud
+              <Icon name="arrow" size={16} />
             </button>
           </form>
         )}

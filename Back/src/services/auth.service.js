@@ -86,9 +86,9 @@ export const registerUser = async ({ name, email, password, rol }) => {
 
     // Insertar el usuario
     const [userResult] = await connection.execute(
-      `INSERT INTO users (name, email, password_hash, rol)
-       VALUES (?, ?, ?, ?)`,
-      [cleanName, cleanEmail, passwordHash, userRole]
+      `INSERT INTO users (name, email, password_hash, rol, phone, dni)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [cleanName, cleanEmail, passwordHash, userRole, 0, 0]
     );
 
     const newUserId = userResult.insertId;
