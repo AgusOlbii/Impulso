@@ -41,8 +41,13 @@ function Admin() {
     <>
       <Header eyebrow="CENTRO DE CONTROL" title="Dashboard Admin" />
       <section className="admin-heading">
-        <div><h2>Resumen del gimnasio</h2><p>Información actualizada al 18 de junio de 2025.</p></div>
-        <button className="outline-button"><Icon name="calendar" size={16} /> Junio 2025</button>
+        <div>
+          <h2>Resumen del gimnasio</h2>
+          <p>Información actualizada al 18 de junio de 2025.</p>
+        </div>
+        <button className="outline-button">
+          <Icon name="calendar" size={16} /> Junio 2025
+        </button>
       </section>
 
       {notice && <div className="success-message admin-notice"><Icon name="check" size={18} /><span>{notice}</span><button onClick={() => setNotice("")} aria-label="Cerrar notificación">×</button></div>}
