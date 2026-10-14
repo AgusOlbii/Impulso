@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from "./components/Sidebar";
 import Admin from "./components/Admin";
-import Classes from "./components/Classes";
 import Home from "./components/Home";
 import Professor from "./components/Professor";
+import PostularProfesor from './components/PostularProfesor';
+import Profesores from './components/Profesores';
 import Profile from "./components/Profile";
 import Routine from "./components/Routine";
 import AuthLayout from "./components/auth/AuthLayout";
@@ -87,34 +88,7 @@ export default function App() {
     }
   }
 
-<<<<<<< Updated upstream
-  const renderPage = (user) => {
-    switch (page) {
-      case "inicio":
-        return <Home setPage={setPage} user={user}/>;
 
-      case "clases":
-        return <Classes />;
-
-      case "rutina":
-        return <Routine />;
-
-      case "profesor":
-        return <Professor user={user} />;
-
-      case "admin":
-        return <Admin />;
-
-      case "Profile":
-        return <Profile user={user} onLogout={handleLogout}/>;
-
-      default:
-        return <Home setPage={setPage} user={user} />;
-    }
-  }; 
-
-=======
->>>>>>> Stashed changes
   if (checkingSession) {
     return <div className="app-loading">Verificando sesión...</div>;
   }
