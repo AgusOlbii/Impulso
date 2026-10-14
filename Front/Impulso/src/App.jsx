@@ -1,6 +1,5 @@
-
 import { useEffect, useState } from "react";
-
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from "./components/Sidebar";
 import Admin from "./components/Admin";
 import Classes from "./components/Classes";
@@ -18,7 +17,6 @@ import {
 } from "./services/authServices";
 
 export default function App() {
-  const [page, setPage] = useState("inicio");
   const [user, setUser] = useState(null);
   const [checkingSession, setCheckingSession] = useState(true);
   const [authError, setAuthError] = useState("");
@@ -48,7 +46,6 @@ export default function App() {
     try {
       const data = await login(credentials);
       setUser(data.user);
-      setPage("inicio");
       return true;
     } catch (error) {
       setAuthError(error.message);
@@ -66,11 +63,10 @@ export default function App() {
       console.error("Error al cerrar sesión:", error);
     } finally {
       setUser(null);
-      setPage("inicio");
     }
   }
 
-// Registrar usuario en el backend.
+  // Registrar usuario en el backend.
   async function handleRegister(userData) {
     setAuthError("");
     setLoading(true);
@@ -78,10 +74,8 @@ export default function App() {
     try {
       const response = await register(userData);
 
-      // Si el registro inicia sesión automáticamente (devuelve el usuario)
       if (response?.user) {
         setUser(response.user);
-        setPage("inicio");
       }
 
       return true;
@@ -93,6 +87,7 @@ export default function App() {
     }
   }
 
+<<<<<<< Updated upstream
   const renderPage = (user) => {
     switch (page) {
       case "inicio":
@@ -118,35 +113,84 @@ export default function App() {
     }
   }; 
 
+=======
+>>>>>>> Stashed changes
   if (checkingSession) {
     return <div className="app-loading">Verificando sesión...</div>;
   }
 
-  if (!user) {
-    return (
-      <AuthLayout
-        onEnter={handleLogin}
-        onRegister={handleRegister}
-        error={authError}
-        loading={loading}
-      />
-    );
-  }
+  // Si no hay usuario, muestra las pantallas de Login / Registro
+  // if (!user) {
+  //   return (
+  //     <AuthLayout
+  //       onEnter={handleLogin}
+  //       onRegister={handleRegister}
+  //       error={authError}
+  //       loading={loading}
+  //     />
+  //   );
+  // }
 
+  // Si hay usuario logueado, renderiza la estructura con React Router
   return (
-    <div className="app">
-      <Sidebar
-        page={page}
-        setPage={setPage}
-        user={user}
-        onLogout={handleLogout}
-      />
+    <BrowserRouter>
+      <Routes>
+        {/* RUTA PÚBLICA: LOGIN */}
+        <Route 
+          path="/login" 
+          element={
+            !user ? (
+              <AuthLayout
+                onEnter={handleLogin}
+                onRegister={handleRegister}
+                error={authError}
+                loading={loading}
+              />
+            ) : (
+              <Navigate to="/" replace /> // Si ya está logueado, no lo dejamos ver el login, lo mandamos al inicio
+            )
+          } 
+        />
 
-      <main className="main-content">
-        <div className="content-container">
-          {renderPage(user)}
-        </div>
-      </main>
-    </div>
+        {/* RUTAS PROTEGIDAS: Si NO hay usuario, lo mandamos obligatoriamente a /login */}
+        {!user ? (
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        ) : (
+          /* Si SÍ hay usuario, renderizamos la app completa con el Sidebar y las páginas */
+          <Route
+            path="*"
+            element={
+              <div className="app">
+                <Sidebar user={user} onLogout={handleLogout} />
+                <main className="main-content">
+                  <div className="content-container">
+                    <Routes>
+                      <Route path="/" element={<Home user={user} />} />
+                      <Route path="/profesores" element={<Profesores />} />
+                      <Route path="/rutina" element={<Routine />} />
+                      <Route 
+                        path="/profesor" 
+                        element={
+                          user.rol === "profesor" ? (
+                            <Professor user={user} />
+                          ) : (
+                            <PostularProfesor />
+                          )
+                        } 
+                      />
+                      <Route path="/admin" element={<Admin />} />
+                      <Route path="/perfil" element={<Profile user={user} onLogout={handleLogout} />} />
+                      
+                      {/* Cualquier ruta interna no encontrada vuelve al inicio */}
+                      <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                  </div>
+                </main>
+              </div>
+            }
+          />
+        )}
+      </Routes>
+    </BrowserRouter>
   );
 }
