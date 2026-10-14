@@ -34,7 +34,7 @@ function PostularProfesor() {
 
   return (
     <>
-      <Header eyebrow="COMUNIDAD" title="Soy profesor" />
+      <Header eyebrow="COMUNIDAD" title="Quiero ser Profesor" />
 
       <section className="form-card">
         {enviado ? (

@@ -36,13 +36,29 @@ export function authorizeRoles(...roles) {
 
 // middlewares/validateRegister.js
 export const validateRegisterInput = (req, res, next) => {
-  const { name, email, password, rol } = req.body ?? {};
+  const { name, email, password, rol, phone, dni } = req.body ?? {};
 
   // Validaciones de presencia y tipo
   if (!name || typeof name !== "string" || !name.trim()) {
     return res.status(400).json({
       ok: false,
       message: "El nombre es obligatorio",
+    });
+  }
+
+  // Validar DNI
+  if (!dni) {
+    return res.status(400).json({
+      ok: false,
+      message: "El DNI es obligatorio",
+    });
+  }
+
+  // Validar Teléfono
+  if (!phone) {
+    return res.status(400).json({
+      ok: false,
+      message: "El teléfono es obligatorio",
     });
   }
 

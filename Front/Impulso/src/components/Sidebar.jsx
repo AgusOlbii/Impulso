@@ -1,10 +1,10 @@
+import { NavLink } from "react-router-dom";
 import navigation from "../data/navigation";
-import Icon from "./icon";
 import adminNavigation from "../data/adminNavigation";
+import professorNavigation from '../data/professorNavigation';
+import Icon from "./icon";
 
-
-function Sidebar({ page, setPage, user, onLogout}) {
-
+function Sidebar({ user, onLogout }) {
   return (
     <aside className="sidebar">
       <div className="brand">
@@ -18,47 +18,70 @@ function Sidebar({ page, setPage, user, onLogout}) {
       </div>
 
       <nav className="sidebar-nav">
-
+        {/* Navegación general (para todos) */}
         {navigation.map((item) => (
-          <button
+          <NavLink
             key={item.id}
-            className={`nav-item ${page === item.id ? "active" : ""}`}
-            onClick={() => setPage(item.id)}
+            to={item.path}
+            className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
           >
             <Icon name={item.icon} size={19} />
             <span>{item.label}</span>
-          </button>
+          </NavLink>
         ))}
 
-
-        {adminNavigation.map((item) => (
-          <button
+        {/* Navegación exclusiva para Admin */}
+        {user.rol === 'admin' && adminNavigation.map((item) => (
+          <NavLink
             key={item.id}
-            className={`nav-item ${page === item.id ? "active" : ""}`}
-            onClick={() => setPage(item.id)}
+            to={item.path}
+            className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
           >
             <Icon name={item.icon} size={19} />
             <span>{item.label}</span>
-          </button>
+          </NavLink>
         ))}
+
+        {/* Navegación para Profesores / Postulación según el rol */}
+        {professorNavigation
+          .filter((item) => {
+            if (user.rol === 'profesor') return item.id === 'panel-profesor';
+            if (user.rol === 'aumno') return item.id === 'postular-profesor'; // Si es alumno ve la postulación
+            return false; // Si es admin no ve ninguna
+          })
+          .map((item) => (
+            <NavLink
+              key={item.id}
+              to={item.path}
+              className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
+            >
+              <Icon name={item.icon} size={19} />
+              <span>{item.label}</span>
+            </NavLink>
+          ))}
       </nav>
 
       <div className="sidebar-bottom">
-
         <button className="nav-item" onClick={onLogout}>
           <Icon name="logout" size={19} />
           <span>Cerrar sesión</span>
         </button>
 
-        <button className="profile-mini" onClick={()=> setPage('Profile')}>
+        <NavLink 
+          to="/perfil" 
+          className={({ isActive }) => `profile-mini ${isActive ? "active" : ""}`}
+        >
           <div className="avatar">JP</div>
           <div>
             <div className="profile-name">{user.name}</div>
-            <div className="profile-role">Socio activo</div>
+            <div className="profile-role">
+              {user.rol === 'admin' ? 'Administrador' : user.rol === 'profesor' ? 'Profesor' : 'Socio activo'}
+            </div>
           </div>
-        </button>
+        </NavLink>
       </div>
     </aside>
   );
 }
+
 export default Sidebar;
