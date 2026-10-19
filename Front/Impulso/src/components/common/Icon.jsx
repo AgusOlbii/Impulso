@@ -1,4 +1,4 @@
-import paths from "./Paths";
+import paths from "../Paths";
 function Icon({ name, size = 20 }) {
   return (
     <svg

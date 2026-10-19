@@ -1,8 +1,8 @@
 import { useState } from "react";
-import Icon from "./icon";
-import Header from "../components/Header";
-import { currentDay } from "../utils/date.now";
-
+import Icon from "../common/Icon";
+import Header from "../common/Header";
+import { currentDay } from "../../utils/date.now";
+import { useNavigate } from "react-router-dom";
 const students = [
   { initials: "AM", name: "Agustín Méndez", plan: "Plan completo", goal: "Hipertrofia", status: "Revisión hoy", tone: "sand" },
   { initials: "VC", name: "Valentina Costa", plan: "Plan completo", goal: "Fuerza", status: "Sin rutina", tone: "rose" },
@@ -20,6 +20,12 @@ function Professor( { user } ) {
     if (!routineName.trim()) return;
     setAssigned([...assigned, `${routineName} · ${student}`]);
     setBuilderOpen(false);
+  };
+  //Instancio el useNavigate y luego creo el handleClick para poder ir a la ruta /students/directory
+  const navigate = useNavigate();
+  const handleClick = () => {
+    // Aquí pones exactamente el mismo path que definiste en App.jsx (por ejemplo, '/profesores' o '/detalle')
+    navigate('/students/directory');
   };
 
   return (
@@ -66,7 +72,17 @@ function Professor( { user } ) {
 
       <div className="professor-grid">
         <section className="students-panel">
-          <div className="panel-head"><div><span className="eyebrow">SEGUIMIENTO</span><h2>Mis alumnos</h2></div><button className="text-button">Ver todos <Icon name="arrow" size={16} /></button></div>
+          <div className="panel-head">
+            <div>
+              <span className="eyebrow">
+                SEGUIMIENTO
+              </span>
+              <h2>
+                Mis alumnos
+              </h2>
+            </div>
+            <button onClick={handleClick} className="text-button">Ver todos <Icon name="arrow" size={16} /></button>
+          </div>
           <div className="student-list">
             {students.map((item) => (
               <article className="student-row" key={item.name}>

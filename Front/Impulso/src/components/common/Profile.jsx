@@ -1,9 +1,5 @@
-import Icon from "./icon";
-import Header from "../components/Header";
-
-
-
-
+import Icon from "./Icon";
+import Header from "./Header";
 
 
 function Profile({ user, onLogout }) {
