@@ -1,6 +1,6 @@
 import { useState } from "react";
-import Header from "../components/Header";
-import Icon from "./icon";
+import Header from "./Header";
+import Icon from "./Icon";
 
 
 const coaches = [
@@ -77,8 +77,23 @@ const coaches = [
     position: "center 32%",
   },
 ];
-
-function Profesores() {
+const contentByRol = {
+  profesor: {
+    eyebrow: "RED DE PROFESIONALES",
+    title: "Comunidad de Profesores",
+    heroTitle: "Conectá con colegas de Impulso.",
+    heroDescription: "Explorá el equipo de profesionales, especialidades y referencias del staff.",
+    showHireButton: false, // No se pueden contratar entre sí
+  },
+  alumno: {
+    eyebrow: "ENTRENAMIENTO PERSONAL",
+    title: "Encontrá tu profesor",
+    heroTitle: "Un plan pensado para vos.",
+    heroDescription: "Elegí un especialista, coordiná tu primera sesión y empezá a trabajar en tus objetivos.",
+    showHireButton: true,
+  }
+};
+function Profesores( {user} ) {
   const [filter, setFilter] = useState("Todos");
   const [hired, setHired] = useState([]);
   const [notice, setNotice] = useState("");
@@ -93,12 +108,13 @@ function Profesores() {
 
   return (
     <>
-      <Header eyebrow="ENTRENAMIENTO PERSONAL" title="Encontrá tu profesor" />
+      <Header eyebrow={user.role === "alumno" ? contentByRol.alumno.eyebrow : contentByRol.profesor.eyebrow} 
+        title={user.rol === "alumno" ? contentByRol.alumno.title : contentByRol.profesor.title} />
       <section className="coach-intro">
         <div>
           <span className="hero-kicker"><span /> PROFESIONALES DE IMPULSO</span>
-          <h2>Un plan pensado<br />para vos.</h2>
-          <p>Elegí un especialista, coordiná tu primera sesión y empezá a trabajar en tus objetivos.</p>
+          <h2>{user.rol === "alumno" ? contentByRol.alumno.heroTitle : contentByRol.profesor.heroTitle }</h2>
+          <p>{user.rol === "alumno" ? contentByRol.alumno.heroDescription : contentByRol.profesor.heroDescription}</p>
         </div>
         <div className="coach-intro-proof">
           <strong>18</strong>
@@ -143,9 +159,12 @@ function Profesores() {
                 <p>{coach.description}</p>
                 <div className="coach-card-footer">
                   <div><span>DESDE</span><strong>{coach.price}</strong><small>/ sesión</small></div>
+                  {user.rol === "alumno" ? 
                   <button className={isHired ? "hire-button hired" : "hire-button"} onClick={() => toggleHire(coach)}>
                     {isHired ? <><Icon name="check" size={16} /> Solicitud enviada</> : <>Contratar <Icon name="arrow" size={16} /></>}
-                  </button>
+                  </button> 
+                  : false}
+                  
                 </div>
               </div>
             </article>

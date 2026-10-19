@@ -1,10 +1,11 @@
 import { NavLink } from "react-router-dom";
-import navigation from "../data/navigation";
-import adminNavigation from "../data/adminNavigation";
-import professorNavigation from '../data/professorNavigation';
-import Icon from "./icon";
+import adminNavigation from "../../data/adminNavigation";
+import professorNavigation from '../../data/professorNavigation';
+import studentNavigation from "../../data/studentNavigation";
+import Icon from "./Icon";
 
-function Sidebar({ user, onLogout }) {
+
+function Sidebar({ user }) {
   return (
     <aside className="sidebar">
       <div className="brand">
@@ -18,8 +19,8 @@ function Sidebar({ user, onLogout }) {
       </div>
 
       <nav className="sidebar-nav">
-        {/* Navegación general (para todos) */}
-        {navigation.map((item) => (
+        {/* Navegación exclusiva para Alumnos */}
+        {user.rol === 'alumno' && studentNavigation.map((item) => (
           <NavLink
             key={item.id}
             to={item.path}
@@ -42,14 +43,8 @@ function Sidebar({ user, onLogout }) {
           </NavLink>
         ))}
 
-        {/* Navegación para Profesores / Postulación según el rol */}
-        {professorNavigation
-          .filter((item) => {
-            if (user.rol === 'profesor') return item.id === 'panel-profesor';
-            if (user.rol === 'aumno') return item.id === 'postular-profesor'; // Si es alumno ve la postulación
-            return false; // Si es admin no ve ninguna
-          })
-          .map((item) => (
+        {/* Navegación para Profesores */}
+        {user.rol === 'profesor' && professorNavigation.map((item) => (
             <NavLink
               key={item.id}
               to={item.path}
@@ -62,11 +57,6 @@ function Sidebar({ user, onLogout }) {
       </nav>
 
       <div className="sidebar-bottom">
-        <button className="nav-item" onClick={onLogout}>
-          <Icon name="logout" size={19} />
-          <span>Cerrar sesión</span>
-        </button>
-
         <NavLink 
           to="/perfil" 
           className={({ isActive }) => `profile-mini ${isActive ? "active" : ""}`}
