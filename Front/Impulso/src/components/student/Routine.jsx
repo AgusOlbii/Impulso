@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Header from "../common/Header";
-import Icon from "../common/icon";
+import Icon from "../common/Icon";
 
 const exercises = [
   { number: "01", name: "Sentadilla con barra", detail: "4 series · 10 repeticiones", weight: "35 kg", muscle: "Piernas" },

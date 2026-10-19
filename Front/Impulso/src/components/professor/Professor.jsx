@@ -35,7 +35,7 @@ function Professor( { user } ) {
         <div>
           <span className="tag bright">{currentDay().eyebrowText}</span>
           <h2>Acompañá cada progreso.</h2>
-          <p>Tenés 2 rutinas para revisar y 3 clases programadas para hoy.</p>
+          <p>Tenés 2 rutinas para revisar hoy.</p>
         </div>
         <button className="primary-button" onClick={() => setBuilderOpen(true)}><Icon name="plus" size={18} /> Crear rutina</button>
       </section>
@@ -66,7 +66,6 @@ function Professor( { user } ) {
       <section className="professor-stats">
         <article><span className="stat-icon lime"><Icon name="users" /></span><div><small>ALUMNOS ACTIVOS</small><strong>24</strong><p>4 con seguimiento hoy</p></div></article>
         <article><span className="stat-icon"><Icon name="clipboard" /></span><div><small>RUTINAS ACTIVAS</small><strong>18</strong><p>75% de tus alumnos</p></div></article>
-        <article><span className="stat-icon"><Icon name="calendar" /></span><div><small>CLASES DE HOY</small><strong>3</strong><p>Próxima a las 18:30</p></div></article>
         <article><span className="stat-icon alert"><Icon name="bell" /></span><div><small>POR REVISAR</small><strong>2</strong><p>Requieren actualización</p></div></article>
       </section>
 
@@ -96,15 +95,6 @@ function Professor( { user } ) {
           </div>
         </section>
 
-        <aside className="today-panel">
-          <div className="panel-head"><div><span className="eyebrow">AGENDA</span><h2>Clases de hoy</h2></div></div>
-          <div className="timeline">
-            <div><span>09:00</span><i /><section><strong>Musculación guiada</strong><small>8 alumnos · Sala principal</small></section></div>
-            <div className="next"><span>18:30</span><i /><section><em>PRÓXIMA</em><strong>Cross Training</strong><small>10 alumnos · Sala funcional</small></section></div>
-            <div><span>20:00</span><i /><section><strong>Musculación guiada</strong><small>6 alumnos · Sala principal</small></section></div>
-          </div>
-          <button className="outline-button schedule-button">Ver agenda completa</button>
-        </aside>
       </div>
     </>
   );
