@@ -1,6 +1,6 @@
 import { useState } from "react";
 import professorApplicants from "../../data/applicants";
-import Icon from "../icon";
+import Icon from "../common/Icon";
 import Header from "../common/Header";
 
 
