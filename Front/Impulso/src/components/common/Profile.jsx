@@ -2,7 +2,10 @@ import Icon from "./Icon";
 import Header from "./Header";
 
 
-function Profile({ user, onLogout }) {
+import professors from "../../data/professors";
+
+function Profile({ user, onLogout, profesorElegidoId }) {
+  const profesor = professors.find((item) => item.id === profesorElegidoId);
   return (
     <>
       <Header eyebrow="TU CUENTA" title="Mi perfil" />
@@ -44,8 +47,12 @@ function Profile({ user, onLogout }) {
             <Icon name="user" />
           </div>
           <span className="eyebrow">TU PROFESOR</span>
-          <h3>Sin profesor asignado</h3>
-          <p>Elegí un profesor desde el menú Profesores.</p>
+          <h3>{profesor ? profesor.name : "Sin profesor asignado"}</h3>
+          <p>
+            {profesor
+              ? `${profesor.specialty} · ${profesor.price || `$${profesor.precio?.toLocaleString("es-AR")}`} / mes`
+              : "Elegí un profesor desde el menú Profesores."}
+          </p>
         </aside>
       </div>
       <div className="settings-list">

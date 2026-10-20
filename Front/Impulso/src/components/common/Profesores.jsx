@@ -1,127 +1,80 @@
 import { useState } from "react";
 import Header from "./Header";
 import Icon from "./Icon";
+import professors from "../../data/professors";
+import estadoEleccion from "../../config/reglasProfesor";
 
-
-const coaches = [
-  {
-    id: 1,
-    name: "Martín López",
-    specialty: "Fuerza",
-    rating: "4,9",
-    reviews: 87,
-    price: "$18.000",
-    description: "Entrenamiento de fuerza y técnica para ganar potencia de forma segura y progresiva.",
-    experience: "8 años de experiencia",
-    image: "https://images.unsplash.com/photo-1628935291759-bbaf33a66dc6?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=85&w=900",
-    position: "center 28%",
-  },
-  {
-    id: 2,
-    name: "Carla Ruiz",
-    specialty: "Cardio",
-    rating: "4,8",
-    reviews: 64,
-    price: "$15.500",
-    description: "Sesiones dinámicas para mejorar tu resistencia, energía y rendimiento cardiovascular.",
-    experience: "6 años de experiencia",
-    image: "https://images.unsplash.com/photo-1679214894748-bcfdcb4dcaff?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=85&w=900",
-    position: "center 35%",
-  },
-  {
-    id: 3,
-    name: "Diego Pérez",
-    specialty: "Musculación",
-    rating: "4,9",
-    reviews: 112,
-    price: "$20.000",
-    description: "Planes de hipertrofia personalizados con seguimiento de cargas, técnica y nutrición.",
-    experience: "10 años de experiencia",
-    image: "https://images.unsplash.com/photo-1694712301331-1088f9dacb1a?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=85&w=900",
-    position: "center 22%",
-  },
-  {
-    id: 4,
-    name: "Sofía Díaz",
-    specialty: "Funcional",
-    rating: "4,7",
-    reviews: 51,
-    price: "$14.000",
-    description: "Movimiento funcional, movilidad y coordinación para sentirte mejor en tu día a día.",
-    experience: "5 años de experiencia",
-    image: "https://images.unsplash.com/photo-1623605931891-d5b95ee98459?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=85&w=900",
-    position: "center 30%",
-  },
-  {
-    id: 5,
-    name: "Joaquín Luna",
-    specialty: "Cross Training",
-    rating: "4,8",
-    reviews: 73,
-    price: "$17.500",
-    description: "Desafíos de alta intensidad adaptados a tu nivel para superar tus propias marcas.",
-    experience: "7 años de experiencia",
-    image: "https://images.unsplash.com/photo-1693214099505-aadb39c60c90?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=85&w=900",
-    position: "center 25%",
-  },
-  {
-    id: 6,
-    name: "Camila Benítez",
-    specialty: "Movilidad",
-    rating: "5,0",
-    reviews: 46,
-    price: "$16.000",
-    description: "Movilidad, recuperación y prevención de lesiones para entrenar con mayor libertad.",
-    experience: "6 años de experiencia",
-    image: "https://images.unsplash.com/photo-1746559845100-0f5a36bfdbe6?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=85&w=900",
-    position: "center 32%",
-  },
+const specialties = [
+  "Todos",
+  "Fuerza",
+  "Cardio",
+  "Musculación",
+  "Funcional",
+  "Cross Training",
+  "Movilidad",
 ];
+
 const contentByRol = {
   profesor: {
     eyebrow: "RED DE PROFESIONALES",
     title: "Comunidad de Profesores",
     heroTitle: "Conectá con colegas de Impulso.",
-    heroDescription: "Explorá el equipo de profesionales, especialidades y referencias del staff.",
-    showHireButton: false, // No se pueden contratar entre sí
+    heroDescription:
+      "Explorá el equipo de profesionales, especialidades y referencias del staff.",
+    showHireButton: false,
   },
   alumno: {
     eyebrow: "ENTRENAMIENTO PERSONAL",
     title: "Encontrá tu profesor",
     heroTitle: "Un plan pensado para vos.",
-    heroDescription: "Elegí un especialista, coordiná tu primera sesión y empezá a trabajar en tus objetivos.",
+    heroDescription:
+      "Elegí un especialista, coordiná tu primera sesión y empezá a trabajar en tus objetivos.",
     showHireButton: true,
-  }
+  },
 };
-function Profesores( {user} ) {
-  const [filter, setFilter] = useState("Todos");
-  const [hired, setHired] = useState([]);
-  const [notice, setNotice] = useState("");
-  const specialties = ["Todos", "Fuerza", "Cardio", "Musculación", "Funcional", "Cross Training", "Movilidad"];
-  const visibleCoaches = filter === "Todos" ? coaches : coaches.filter((coach) => coach.specialty === filter);
 
-  const toggleHire = (coach) => {
-    const isHired = hired.includes(coach.id);
-    setHired(isHired ? hired.filter((id) => id !== coach.id) : [...hired, coach.id]);
-    setNotice(isHired ? `Cancelaste la solicitud con ${coach.name}.` : `¡Listo! ${coach.name} recibió tu solicitud y se contactará con vos.`);
-  };
+function textoBoton(estado) {
+  if (estado === "ya_elegido") return "Elegido";
+  if (estado === "cambiar") return "Cambiar";
+  if (estado === "no_disponible") return "No disponible";
+  return "Contratar";
+}
+
+function Profesores({ user, profesorElegidoId, onElegir, onDejar }) {
+  const [filter, setFilter] = useState("Todos");
+  const [notice, setNotice] = useState("");
+  const copy = contentByRol[user?.rol] || contentByRol.alumno;
+  const socio = { id: user?.id, profesorId: profesorElegidoId };
+  const visibleCoaches =
+    filter === "Todos"
+      ? professors
+      : professors.filter((coach) => coach.specialty === filter);
 
   return (
     <>
-      <Header eyebrow={user.role === "alumno" ? contentByRol.alumno.eyebrow : contentByRol.profesor.eyebrow} 
-        title={user.rol === "alumno" ? contentByRol.alumno.title : contentByRol.profesor.title} />
+      <Header eyebrow={copy.eyebrow} title={copy.title} />
       <section className="coach-intro">
         <div>
-          <span className="hero-kicker"><span /> PROFESIONALES DE IMPULSO</span>
-          <h2>{user.rol === "alumno" ? contentByRol.alumno.heroTitle : contentByRol.profesor.heroTitle }</h2>
-          <p>{user.rol === "alumno" ? contentByRol.alumno.heroDescription : contentByRol.profesor.heroDescription}</p>
+          <span className="hero-kicker">
+            <span /> PROFESIONALES DE IMPULSO
+          </span>
+          <h2>{copy.heroTitle}</h2>
+          <p>{copy.heroDescription}</p>
         </div>
         <div className="coach-intro-proof">
-          <strong>18</strong>
-          <span>profesionales<br />certificados</span>
+          <strong>{professors.length}</strong>
+          <span>
+            profesionales
+            <br />
+            certificados
+          </span>
           <i />
           <strong>4,9</strong>
-          <span>valoración<br />promedio</span>
+          <span>
+            valoración
+            <br />
+            promedio
+          </span>
         </div>
       </section>
 
@@ -130,41 +83,100 @@ function Profesores( {user} ) {
           <span className="eyebrow">ELEGÍ TU ESPECIALIDAD</span>
           <div className="coach-filters">
             {specialties.map((specialty) => (
-              <button key={specialty} className={`filter ${filter === specialty ? "active" : ""}`} onClick={() => setFilter(specialty)}>
+              <button
+                key={specialty}
+                type="button"
+                className={`filter ${filter === specialty ? "active" : ""}`}
+                onClick={() => setFilter(specialty)}
+              >
                 {specialty}
               </button>
             ))}
           </div>
         </div>
-        <span className="coach-count">{visibleCoaches.length} profesores disponibles</span>
+        <span className="coach-count">
+          {visibleCoaches.length} profesores disponibles
+        </span>
       </div>
 
-      {notice && <div className="success-message coach-notice"><Icon name="check" size={18} /><span>{notice}</span><button onClick={() => setNotice("")} aria-label="Cerrar notificación">×</button></div>}
+      {notice && (
+        <div className="success-message coach-notice">
+          <Icon name="check" size={18} />
+          <span>{notice}</span>
+          <button onClick={() => setNotice("")} aria-label="Cerrar notificación">
+            ×
+          </button>
+        </div>
+      )}
 
       <section className="coach-grid">
         {visibleCoaches.map((coach) => {
-          const isHired = hired.includes(coach.id);
+          const estado = estadoEleccion(socio, coach);
+          const puedeClick =
+            estado === "puede" ||
+            estado === "cambiar" ||
+            estado === "ya_elegido";
+
           return (
             <article className="coach-card" key={coach.id}>
               <div className="coach-photo">
-                <img src={coach.image} alt={`${coach.name}, profesor de ${coach.specialty}`} style={{ objectPosition: coach.position }} />
-                <span className="coach-available"><i /> Disponible</span>
+                <img
+                  src={coach.image}
+                  alt={`${coach.name}, profesor de ${coach.specialty}`}
+                  style={{ objectPosition: coach.position }}
+                />
+                {(!coach.status || coach.status === "approved") && (
+                  <span className="coach-available">
+                    <i /> Disponible
+                  </span>
+                )}
                 <span className="coach-specialty">{coach.specialty}</span>
               </div>
               <div className="coach-card-body">
                 <div className="coach-name-row">
-                  <div><h3>{coach.name}</h3><span>{coach.experience}</span></div>
-                  <span className="coach-rating"><Icon name="star" size={14} /><strong>{coach.rating}</strong><small>({coach.reviews})</small></span>
+                  <div>
+                    <h3>{coach.name}</h3>
+                    <span>{coach.experience}</span>
+                  </div>
+                  <span className="coach-rating">
+                    <Icon name="star" size={14} />
+                    <strong>{coach.rating}</strong>
+                    <small>({coach.reviews})</small>
+                  </span>
                 </div>
                 <p>{coach.description}</p>
                 <div className="coach-card-footer">
-                  <div><span>DESDE</span><strong>{coach.price}</strong><small>/ sesión</small></div>
-                  {user.rol === "alumno" ? 
-                  <button className={isHired ? "hire-button hired" : "hire-button"} onClick={() => toggleHire(coach)}>
-                    {isHired ? <><Icon name="check" size={16} /> Solicitud enviada</> : <>Contratar <Icon name="arrow" size={16} /></>}
-                  </button> 
-                  : false}
-                  
+                  <div>
+                    <span>DESDE</span>
+                    <strong>{coach.price}</strong>
+                    <small>/ mes</small>
+                  </div>
+                  {copy.showHireButton && (
+                    <button
+                      type="button"
+                      disabled={!puedeClick}
+                      className={`hire-button ${estado === "ya_elegido" ? "hired" : ""}`}
+                      onClick={() => {
+                        if (estado === "ya_elegido") {
+                          onDejar();
+                          setNotice(`Dejaste de entrenar con ${coach.name}.`);
+                          return;
+                        }
+                        onElegir(coach.id);
+                        setNotice(`Contrataste a ${coach.name}. Tu rutina ya está en Mi rutina.`);
+                      }}
+                    >
+                      {estado === "ya_elegido" ? (
+                        <>
+                          <Icon name="check" size={16} /> {textoBoton(estado)}
+                        </>
+                      ) : (
+                        <>
+                          {textoBoton(estado)} <Icon name="arrow" size={16} />
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
             </article>
@@ -174,6 +186,5 @@ function Profesores( {user} ) {
     </>
   );
 }
-
 
 export default Profesores;

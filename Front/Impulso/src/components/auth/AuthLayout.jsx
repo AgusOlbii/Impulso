@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Icon from "../icon";
+import Icon from "../common/Icon";
 import photo from "../../data/photo";
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterPage";
@@ -89,6 +89,7 @@ return (
           type="button"
           className={mode === "login" ? "active" : ""}
           onClick={() => handleModeChange("login")}
+          style={{fontSize:'12px'}}
         >
           Ingresar
         </button>
@@ -97,6 +98,7 @@ return (
           type="button"
           className={mode === "register" ? "active" : ""}
           onClick={() => handleModeChange("register")}
+          style={{fontSize:'12px'}}
         >
           Registrarme
         </button>

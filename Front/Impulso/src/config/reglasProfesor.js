@@ -1,5 +1,5 @@
 const estadoEleccion = (socio, profesor) => {
-  if (profesor.status !== "approved") {
+  if (profesor.status && profesor.status !== "approved") {
     return "no_disponible";
   }
   if (socio.profesorId === profesor.id) {

@@ -1,41 +1,37 @@
 import { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-// Importacion de carpeta ADMIN
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Admin from "./components/admin/Admin";
 import ExerciseCreator from "./components/admin/ExerciseCreator";
-// Importaciones de carpeta AUTH
 import AuthLayout from "./components/auth/AuthLayout";
-// Importaciones de carpeta COMMON
 import Home from "./components/common/Home";
 import MobileNav from "./components/common/MobileNav";
-import Profesores from './components/common/Profesores';
+import Profesores from "./components/common/Profesores";
 import Profile from "./components/common/Profile";
 import Sidebar from "./components/common/Sidebar";
-// Importaciones de carpeta PROFESSOR
 import CreateRoutine from "./components/professor/CreateRoutine";
 import Professor from "./components/professor/Professor";
 import StudentsDirectory from "./components/professor/StudentsDirectory";
-// Importaciones de carpeta STUDENT
-import PostularProfesor from './components/student/PostularProfesor';
+import PostularProfesor from "./components/student/PostularProfesor";
 import Routine from "./components/student/Routine";
-//Importaciones de COMPONENTS
 import Unauthorized from "./components/Unauthorized";
-// Importaciones de la carpeta SERVICES
 import {
   login,
   getCurrentUser,
   logout,
   register,
 } from "./services/authServices";
-
+import {
+  leerProfesorElegido,
+  guardarProfesorElegido,
+} from "./data/eleccionProfesor";
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [checkingSession, setCheckingSession] = useState(true);
   const [authError, setAuthError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [profesorElegidoId, setProfesorElegidoId] = useState(null);
 
-  // Verificar si ya existe una sesión válida.
   useEffect(() => {
     async function checkSession() {
       try {
@@ -51,7 +47,25 @@ export default function App() {
     checkSession();
   }, []);
 
-  // Iniciar sesión contra el backend.
+  useEffect(() => {
+    if (!user?.id) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setProfesorElegidoId(null);
+      return;
+    }
+    setProfesorElegidoId(leerProfesorElegido(user.id));
+  }, [user?.id]);
+
+  const elegirProfesor = (profesorId) => {
+    setProfesorElegidoId(profesorId);
+    guardarProfesorElegido(user.id, profesorId);
+  };
+
+  const dejarProfesor = () => {
+    setProfesorElegidoId(null);
+    guardarProfesorElegido(user.id, null);
+  };
+
   async function handleLogin(credentials) {
     setAuthError("");
     setLoading(true);
@@ -68,7 +82,6 @@ export default function App() {
     }
   }
 
-  // Cerrar sesión en el backend.
   async function handleLogout() {
     try {
       await logout();
@@ -79,7 +92,6 @@ export default function App() {
     }
   }
 
-  // Registrar usuario en el backend.
   async function handleRegister(userData) {
     setAuthError("");
     setLoading(true);
@@ -100,7 +112,6 @@ export default function App() {
     }
   }
 
-
   if (checkingSession) {
     return <div className="app-loading">Verificando sesión...</div>;
   }
@@ -108,9 +119,8 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* RUTA PÚBLICA: LOGIN */}
-        <Route 
-          path="/login" 
+        <Route
+          path="/login"
           element={
             !user ? (
               <AuthLayout
@@ -120,44 +130,110 @@ export default function App() {
                 loading={loading}
               />
             ) : (
-              <Navigate to="/" replace /> // Si ya está logueado, no lo dejamos ver el login, lo mandamos al inicio
+              <Navigate to="/" replace />
             )
-          } 
+          }
         />
 
-        {/* RUTAS PROTEGIDAS: Si NO hay usuario, lo mandamos obligatoriamente a /login */}
         {!user ? (
           <Route path="*" element={<Navigate to="/login" replace />} />
         ) : (
-          /* Si SÍ hay usuario, renderizamos la app completa con el Sidebar y las páginas */
           <Route
             path="*"
             element={
               <div className="app">
-                <Sidebar user={user}/>
+                <Sidebar user={user} />
                 <main className="main-content">
                   <div className="content-container">
                     <Routes>
-                      {/* RUTAS PARA TODOS LOS ROLES */}
                       <Route path="/" element={<Home user={user} />} />
-                      <Route path="/profesores" element={<Profesores user={user}/>} />
-                      <Route path="/perfil" element={<Profile user={user} onLogout={handleLogout} />} />
-                      {/* RUTAS PARA LOS ALUMNOS */}
-                      <Route path="/rutina" element={user.rol === 'alumno' ? (<Routine />) : (<Unauthorized/>)} />
-                      <Route path="/postular/profesor" element={user.rol === "alumno" ? (<PostularProfesor/>) : (<Unauthorized/>)}></Route>
-                      {/* RUTAS PARA LOS PROFESORES */}
-                      <Route path="/panel/profesor" element={user.rol === 'profesor' ? (<Professor user={user}/>) : (<Unauthorized/>)}></Route>
-                      <Route path="/create/routine" element={user.rol === 'profesor' ? (<CreateRoutine/>) : (<Unauthorized/>)}/>
-                      <Route path="/students/directory" element={user.rol === "profesor" ? (<StudentsDirectory/>) : (<Unauthorized/>)}></Route>
-                      {/* RUTAS PARA EL ADMIN */}
+                      <Route
+                        path="/profesores"
+                        element={
+                          <Profesores
+                            user={user}
+                            profesorElegidoId={profesorElegidoId}
+                            onElegir={elegirProfesor}
+                            onDejar={dejarProfesor}
+                          />
+                        }
+                      />
+                      <Route
+                        path="/perfil"
+                        element={
+                          <Profile
+                            user={user}
+                            onLogout={handleLogout}
+                            profesorElegidoId={profesorElegidoId}
+                          />
+                        }
+                      />
+                      <Route
+                        path="/rutina"
+                        element={
+                          user.rol === "alumno" ? (
+                            <Routine profesorElegidoId={profesorElegidoId} />
+                          ) : (
+                            <Unauthorized />
+                          )
+                        }
+                      />
+                      <Route
+                        path="/postular/profesor"
+                        element={
+                          user.rol === "alumno" ? (
+                            <PostularProfesor user={user} />
+                          ) : (
+                            <Unauthorized />
+                          )
+                        }
+                      />
+                      <Route
+                        path="/panel/profesor"
+                        element={
+                          user.rol === "profesor" ? (
+                            <Professor user={user} />
+                          ) : (
+                            <Unauthorized />
+                          )
+                        }
+                      />
+                      <Route
+                        path="/create/routine"
+                        element={
+                          user.rol === "profesor" ? (
+                            <CreateRoutine />
+                          ) : (
+                            <Unauthorized />
+                          )
+                        }
+                      />
+                      <Route
+                        path="/students/directory"
+                        element={
+                          user.rol === "profesor" ? (
+                            <StudentsDirectory />
+                          ) : (
+                            <Unauthorized />
+                          )
+                        }
+                      />
                       <Route path="/admin" element={<Admin />} />
-                      <Route path="/create/exercise" element={user.rol === 'admin' ? (<ExerciseCreator/>) : (<Unauthorized/>)}></Route>
-                      {/* Cualquier ruta interna no encontrada vuelve al inicio */}
+                      <Route
+                        path="/create/exercise"
+                        element={
+                          user.rol === "admin" ? (
+                            <ExerciseCreator />
+                          ) : (
+                            <Unauthorized />
+                          )
+                        }
+                      />
                       <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                   </div>
                 </main>
-                <MobileNav user={user}/>
+                <MobileNav user={user} />
               </div>
             }
           />
