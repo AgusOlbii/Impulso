@@ -54,6 +54,8 @@ export const registerUser = async ({ name, email, password, rol, phone, dni }) =
   // 1. Normalizar los datos
   const cleanName = name.trim();
   const cleanEmail = email.trim().toLowerCase();
+  const cleanPhone = String(phone ?? "").trim();
+  const cleanDni = String(dni ?? "").trim();
 
   // 2. Validar el rol
   const userRole = rol || "alumno";
@@ -86,7 +88,7 @@ export const registerUser = async ({ name, email, password, rol, phone, dni }) =
     const [userResult] = await connection.execute(
       `INSERT INTO users (name, phone, dni, email, password_hash, rol)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [cleanName, phone, dni, cleanEmail, passwordHash, userRole]
+      [cleanName, cleanPhone, cleanDni, cleanEmail, passwordHash, userRole]
     );
 
     const newUserId = userResult.insertId;
@@ -113,8 +115,8 @@ export const registerUser = async ({ name, email, password, rol, phone, dni }) =
       id: newUserId,
       name: cleanName,
       email: cleanEmail,
-      phone,
-      dni,
+      phone: cleanPhone,
+      dni: cleanDni,
       rol: userRole,
     };
   } catch (error) {
