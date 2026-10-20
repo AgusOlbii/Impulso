@@ -21,7 +21,7 @@ function LoginForm({ onEnter, loading }) {
   return (
     <form className="auth-form" onSubmit={handleSubmit}>
       <label>
-        <span>Correo electrónico</span>
+        <span style={{fontSize:'12px'}}>Correo electrónico</span>
 
         <div className="input-wrap">
           <Icon name="user" size={18} />
@@ -37,7 +37,7 @@ function LoginForm({ onEnter, loading }) {
       </label>
 
       <label>
-        <span>Contraseña</span>
+        <span style={{fontSize:'12px'}}>Contraseña</span>
 
         <div className="input-wrap">
           <Icon name="shield" size={18} />

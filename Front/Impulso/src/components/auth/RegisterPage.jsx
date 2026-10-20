@@ -31,18 +31,22 @@ function RegisterForm({ onRegister }) {
     <form className="auth-form" onSubmit={handleSubmit}>
       <div className="auth-field-row">
         <label>
-          <span>Nombre</span>
-          <input name="name" placeholder="Lucía" required />
+          <span style={{fontSize:'12px'}}>Nombre</span>
+          <div className="input-wrap">
+            <input name="name" placeholder="Nombre" required />
+          </div>
         </label>
 
         <label>
-          <span>Apellido</span>
-          <input name="surname" placeholder="Medina" required />
+          <span style={{fontSize:'12px'}}>Apellido</span>
+          <div className="input-wrap">
+            <input name="surname" placeholder="Apellido" required />
+          </div>
         </label>
       </div>
 
       <label>
-        <span>Correo electrónico</span>
+        <span style={{fontSize:'12px'}}>Correo electrónico</span>
         <div className="input-wrap">
           <Icon name="user" size={18} />
           <input
@@ -56,7 +60,7 @@ function RegisterForm({ onRegister }) {
 
       {/* Tipo de cuenta / Rol */}
       <label>
-        <span>Tipo de cuenta</span>
+        <span style={{fontSize:'12px'}}>Tipo de cuenta</span>
         <select name="rol" defaultValue="alumno">
           <option value="alumno">Alumno / Socio</option>
           <option value="profesor">Profesor</option>
@@ -64,7 +68,7 @@ function RegisterForm({ onRegister }) {
       </label>
 
       <label>
-        <span>Contraseña</span>
+        <span style={{fontSize:'12px'}}>Contraseña</span>
         <div className="input-wrap">
           <Icon name="shield" size={18} />
           <input
@@ -75,10 +79,7 @@ function RegisterForm({ onRegister }) {
             required
           />
 
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-          >
+          <button type="button" onClick={() => setShowPassword(!showPassword)}>
             {showPassword ? "Ocultar" : "Ver"}
           </button>
         </div>
@@ -86,9 +87,7 @@ function RegisterForm({ onRegister }) {
 
       <label className="terms">
         <input type="checkbox" required />
-        <span>
-          Acepto los términos de uso y la política de privacidad.
-        </span>
+        <span>Acepto los términos de uso y la política de privacidad.</span>
       </label>
 
       <button className="auth-submit" type="submit">

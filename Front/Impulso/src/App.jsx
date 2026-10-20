@@ -48,6 +48,7 @@ export default function App() {
 
   useEffect(() => {
     if (!user?.id) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setProfesorElegidoId(null);
       return;
     }
