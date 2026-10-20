@@ -1,16 +1,19 @@
-
 import { useEffect, useState } from "react";
-
-import Sidebar from "./components/Sidebar";
-import Admin from "./components/Admin";
-import Profesores from "./components/Profesores";
-import Home from "./components/Home";
-import Professor from "./components/Professor";
-import PostularProfesor from "./components/PostularProfesor";
-import Profile from "./components/Profile";
-import Routine from "./components/Routine";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Admin from "./components/admin/Admin";
+import ExerciseCreator from "./components/admin/ExerciseCreator";
 import AuthLayout from "./components/auth/AuthLayout";
-
+import Home from "./components/common/Home";
+import MobileNav from "./components/common/MobileNav";
+import Profesores from "./components/common/Profesores";
+import Profile from "./components/common/Profile";
+import Sidebar from "./components/common/Sidebar";
+import CreateRoutine from "./components/professor/CreateRoutine";
+import Professor from "./components/professor/Professor";
+import StudentsDirectory from "./components/professor/StudentsDirectory";
+import PostularProfesor from "./components/student/PostularProfesor";
+import Routine from "./components/student/Routine";
+import Unauthorized from "./components/Unauthorized";
 import {
   login,
   getCurrentUser,
@@ -23,14 +26,12 @@ import {
 } from "./data/eleccionProfesor";
 
 export default function App() {
-  const [page, setPage] = useState("inicio");
   const [user, setUser] = useState(null);
   const [checkingSession, setCheckingSession] = useState(true);
   const [authError, setAuthError] = useState("");
   const [loading, setLoading] = useState(false);
   const [profesorElegidoId, setProfesorElegidoId] = useState(null);
 
-  // Verificar si ya existe una sesión válida.
   useEffect(() => {
     async function checkSession() {
       try {
@@ -65,7 +66,6 @@ export default function App() {
     guardarProfesorElegido(user.id, null);
   };
 
-  // Iniciar sesión contra el backend.
   async function handleLogin(credentials) {
     setAuthError("");
     setLoading(true);
@@ -73,7 +73,6 @@ export default function App() {
     try {
       const data = await login(credentials);
       setUser(data.user);
-      setPage("inicio");
       return true;
     } catch (error) {
       setAuthError(error.message);
@@ -83,7 +82,6 @@ export default function App() {
     }
   }
 
-  // Cerrar sesión en el backend.
   async function handleLogout() {
     try {
       await logout();
@@ -91,11 +89,9 @@ export default function App() {
       console.error("Error al cerrar sesión:", error);
     } finally {
       setUser(null);
-      setPage("inicio");
     }
   }
 
-// Registrar usuario en el backend.
   async function handleRegister(userData) {
     setAuthError("");
     setLoading(true);
@@ -103,10 +99,8 @@ export default function App() {
     try {
       const response = await register(userData);
 
-      // Si el registro inicia sesión automáticamente (devuelve el usuario)
       if (response?.user) {
         setUser(response.user);
-        setPage("inicio");
       }
 
       return true;
@@ -118,94 +112,133 @@ export default function App() {
     }
   }
 
-  const renderPage = (user) => {
-    switch (page) {
-      case "inicio":
-        return (
-          <Home
-            setPage={setPage}
-            user={user}
-            profesorElegidoId={profesorElegidoId}
-          />
-        );
-
-      case "profesores":
-        return (
-          <Profesores
-            user={user}
-            profesorElegidoId={profesorElegidoId}
-            onElegir={elegirProfesor}
-            onDejar={dejarProfesor}
-          />
-        );
-
-      case "rutina":
-        return (
-          <Routine
-            setPage={setPage}
-            profesorElegidoId={profesorElegidoId}
-          />
-        );
-
-      case "profesor":
-        return user.rol === "profesor" ? (
-          <Professor user={user} />
-        ) : (
-          <PostularProfesor user={user} />
-        );
-
-      case "admin":
-        return <Admin />;
-
-      case "Profile":
-        return (
-          <Profile
-            user={user}
-            onLogout={handleLogout}
-            profesorElegidoId={profesorElegidoId}
-          />
-        );
-
-      default:
-        return (
-          <Home
-            setPage={setPage}
-            user={user}
-            profesorElegidoId={profesorElegidoId}
-          />
-        );
-    }
-  }; 
-
   if (checkingSession) {
     return <div className="app-loading">Verificando sesión...</div>;
   }
 
-  if (!user) {
-    return (
-      <AuthLayout
-        onEnter={handleLogin}
-        onRegister={handleRegister}
-        error={authError}
-        loading={loading}
-      />
-    );
-  }
-
   return (
-    <div className="app">
-      <Sidebar
-        page={page}
-        setPage={setPage}
-        user={user}
-        onLogout={handleLogout}
-      />
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            !user ? (
+              <AuthLayout
+                onEnter={handleLogin}
+                onRegister={handleRegister}
+                error={authError}
+                loading={loading}
+              />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
 
-      <main className="main-content">
-        <div className="content-wrap">
-          {renderPage(user)}
-        </div>
-      </main>
-    </div>
+        {!user ? (
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        ) : (
+          <Route
+            path="*"
+            element={
+              <div className="app">
+                <Sidebar user={user} />
+                <main className="main-content">
+                  <div className="content-container">
+                    <Routes>
+                      <Route path="/" element={<Home user={user} />} />
+                      <Route
+                        path="/profesores"
+                        element={
+                          <Profesores
+                            user={user}
+                            profesorElegidoId={profesorElegidoId}
+                            onElegir={elegirProfesor}
+                            onDejar={dejarProfesor}
+                          />
+                        }
+                      />
+                      <Route
+                        path="/perfil"
+                        element={
+                          <Profile
+                            user={user}
+                            onLogout={handleLogout}
+                            profesorElegidoId={profesorElegidoId}
+                          />
+                        }
+                      />
+                      <Route
+                        path="/rutina"
+                        element={
+                          user.rol === "alumno" ? (
+                            <Routine profesorElegidoId={profesorElegidoId} />
+                          ) : (
+                            <Unauthorized />
+                          )
+                        }
+                      />
+                      <Route
+                        path="/postular/profesor"
+                        element={
+                          user.rol === "alumno" ? (
+                            <PostularProfesor user={user} />
+                          ) : (
+                            <Unauthorized />
+                          )
+                        }
+                      />
+                      <Route
+                        path="/panel/profesor"
+                        element={
+                          user.rol === "profesor" ? (
+                            <Professor user={user} />
+                          ) : (
+                            <Unauthorized />
+                          )
+                        }
+                      />
+                      <Route
+                        path="/create/routine"
+                        element={
+                          user.rol === "profesor" ? (
+                            <CreateRoutine />
+                          ) : (
+                            <Unauthorized />
+                          )
+                        }
+                      />
+                      <Route
+                        path="/students/directory"
+                        element={
+                          user.rol === "profesor" ? (
+                            <StudentsDirectory />
+                          ) : (
+                            <Unauthorized />
+                          )
+                        }
+                      />
+                      <Route path="/admin" element={<Admin />} />
+                      <Route
+                        path="/create/exercise"
+                        element={
+                          user.rol === "admin" ? (
+                            <ExerciseCreator />
+                          ) : (
+                            <Unauthorized />
+                          )
+                        }
+                      />
+                      <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                  </div>
+                </main>
+                <MobileNav user={user} />
+              </div>
+            }
+          />
+        )}
+      </Routes>
+    </BrowserRouter>
   );
 }

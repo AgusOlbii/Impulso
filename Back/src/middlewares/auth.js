@@ -35,48 +35,63 @@ export function authorizeRoles(...roles) {
 }
 
 // middlewares/validateRegister.js
-export const validateRegisterInput = (req, res, next) => {
-  const { name, email, password, rol } = req.body ?? {};
+// export const validateRegisterInput = (req, res, next) => {
+//   const { name, email, password, rol, phone, dni } = req.body ?? {};
+//   // Validaciones de presencia y tipo
+//   if (!name || typeof name !== "string" || !name.trim()) {
+//     return res.status(400).json({
+//       ok: false,
+//       message: "El nombre es obligatorio",
+//     });
+//   }
 
-  // Validaciones de presencia y tipo
-  if (!name || typeof name !== "string" || !name.trim()) {
-    return res.status(400).json({
-      ok: false,
-      message: "El nombre es obligatorio",
-    });
-  }
+//   // Validar DNI
+//   if (!dni) {
+//     return res.status(400).json({
+//       ok: false,
+//       message: "El DNI es obligatorio",
+//     });
+//   }
 
-  if (!email || typeof email !== "string" || !email.trim()) {
-    return res.status(400).json({
-      ok: false,
-      message: "El correo electrónico es obligatorio",
-    });
-  }
+//   // Validar Teléfono
+//   if (!phone) {
+//     return res.status(400).json({
+//       ok: false,
+//       message: "El teléfono es obligatorio",
+//     });
+//   }
 
-  // Validar formato de email simple
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email.trim())) {
-    return res.status(400).json({
-      ok: false,
-      message: "El correo electrónico no tiene un formato válido",
-    });
-  }
+//   if (!email || typeof email !== "string" || !email.trim()) {
+//     return res.status(400).json({
+//       ok: false,
+//       message: "El correo electrónico es obligatorio",
+//     });
+//   }
 
-  if (!password || typeof password !== "string" || password.length < 6) {
-    return res.status(400).json({
-      ok: false,
-      message: "La contraseña debe tener al menos 6 caracteres",
-    });
-  }
+//   // Validar formato de email simple
+//   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//   if (!emailRegex.test(email.trim())) {
+//     return res.status(400).json({
+//       ok: false,
+//       message: "El correo electrónico no tiene un formato válido",
+//     });
+//   }
 
-  // Validar que el rol sea uno de los permitidos (evitar que se registren como 'admin' directamente)
-  const allowedRoles = ["alumno", "profesor"];
-  if (rol && !allowedRoles.includes(rol)) {
-    return res.status(400).json({
-      ok: false,
-      message: "El rol seleccionado no es válido para el registro público",
-    });
-  }
+//   if (!password || typeof password !== "string" || password.length < 6) {
+//     return res.status(400).json({
+//       ok: false,
+//       message: "La contraseña debe tener al menos 6 caracteres",
+//     });
+//   }
 
-  next();
-};
+//   // Validar que el rol sea uno de los permitidos (evitar que se registren como 'admin' directamente)
+//   const allowedRoles = ["alumno", "profesor"];
+//   if (rol && !allowedRoles.includes(rol)) {
+//     return res.status(400).json({
+//       ok: false,
+//       message: "El rol seleccionado no es válido para el registro público",
+//     });
+//   }
+
+//   next();
+// };

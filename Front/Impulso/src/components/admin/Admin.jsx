@@ -1,7 +1,7 @@
 import { useState } from "react";
-import professorApplicants from "../data/applicants";
-import Icon from "./icon";
-import Header from "../components/Header";
+import professorApplicants from "../../data/applicants";
+import Icon from "../common/Icon";
+import Header from "../common/Header";
 
 
 const activeProfessors = [

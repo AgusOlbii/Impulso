@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Icon from "../icon";
+import Icon from "../common/Icon";
 
 function RegisterForm({ onRegister }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -11,13 +11,13 @@ function RegisterForm({ onRegister }) {
     const formData = new FormData(event.target);
     const formValues = Object.fromEntries(formData.entries());
 
-    // 2. Mapear y adaptar los datos para el Backend
+    // 2. Mapear y adaptar los datos para el Backend (incluyendo phone y dni)
     const payload = {
-      // Concatenamos Nombre y Apellido para el campo 'name' del Backend
       name: `${formValues.name} ${formValues.surname}`.trim(),
+      phone: formValues.phone,
+      dni: formValues.dni,
       email: formValues.email,
       password: formValues.password,
-      // Mapeamos el plan seleccionado al rol correspondiente ('alumno')
       rol: formValues.rol || "alumno",
     };
 
@@ -45,6 +45,28 @@ function RegisterForm({ onRegister }) {
         </label>
       </div>
 
+      <div className="auth-field-row">
+        <label>
+          <span>DNI</span>
+          <input 
+            name="dni" 
+            type="number" 
+            placeholder="35123456" 
+            required 
+          />
+        </label>
+
+        <label>
+          <span>Teléfono / Celular</span>
+          <input 
+            name="phone" 
+            type="tel" 
+            placeholder="3511234567" 
+            required 
+          />
+        </label>
+      </div>
+
       <label>
         <span style={{fontSize:'12px'}}>Correo electrónico</span>
         <div className="input-wrap">
@@ -58,7 +80,6 @@ function RegisterForm({ onRegister }) {
         </div>
       </label>
 
-      {/* Tipo de cuenta / Rol */}
       <label>
         <span style={{fontSize:'12px'}}>Tipo de cuenta</span>
         <select name="rol" defaultValue="alumno">

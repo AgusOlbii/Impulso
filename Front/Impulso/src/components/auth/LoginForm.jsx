@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import Icon from "../icon";
+import Icon from "../common/Icon";
 
 function LoginForm({ onEnter, loading }) {
   const [showPassword, setShowPassword] = useState(false);

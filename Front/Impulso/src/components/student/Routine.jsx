@@ -1,10 +1,12 @@
 import { useState } from "react";
-import Header from "../components/Header";
-import Icon from "./icon";
-import professors from "../data/professors";
-import rutinasPorProfesor from "../data/rutinasPorProfesor";
+import { useNavigate } from "react-router-dom";
+import Header from "../common/Header";
+import Icon from "../common/Icon";
+import professors from "../../data/professors";
+import rutinasPorProfesor from "../../data/rutinasPorProfesor";
 
-function Routine({ setPage, profesorElegidoId }) {
+function Routine({ profesorElegidoId }) {
+  const navigate = useNavigate();
   const [diaActivo, setDiaActivo] = useState("lunes");
   const [completed, setCompleted] = useState([]);
 
@@ -42,7 +44,7 @@ function Routine({ setPage, profesorElegidoId }) {
               que armó para la semana.
             </p>
           </div>
-          <button className="primary-button" onClick={() => setPage("profesores")}>
+          <button className="primary-button" onClick={() => navigate("/profesores")}>
             Ver profesores
             <Icon name="arrow" size={16} />
           </button>

@@ -50,14 +50,12 @@ export const getUserById = async (userId) => {
 };
 
 
-export const registerUser = async ({ name, email, password, rol }) => {
+export const registerUser = async ({ name, email, password, rol, phone, dni }) => {
   // 1. Normalizar los datos
   const cleanName = name.trim();
   const cleanEmail = email.trim().toLowerCase();
 
   // 2. Validar el rol
-  // El registro público solo permite alumnos.
-  // Los profesores deben ser autorizados por el backend.
   const userRole = rol || "alumno";
 
   if (!["alumno", "profesor"].includes(userRole)) {
@@ -84,11 +82,11 @@ export const registerUser = async ({ name, email, password, rol }) => {
   try {
     await connection.beginTransaction();
 
-    // Insertar el usuario
+    // Insertar el usuario incluyendo phone y dni
     const [userResult] = await connection.execute(
-      `INSERT INTO users (name, email, password_hash, rol, phone, dni)
+      `INSERT INTO users (name, phone, dni, email, password_hash, rol)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [cleanName, cleanEmail, passwordHash, userRole, 0, 0]
+      [cleanName, phone, dni, cleanEmail, passwordHash, userRole]
     );
 
     const newUserId = userResult.insertId;
@@ -115,16 +113,18 @@ export const registerUser = async ({ name, email, password, rol }) => {
       id: newUserId,
       name: cleanName,
       email: cleanEmail,
+      phone,
+      dni,
       rol: userRole,
     };
   } catch (error) {
     // Deshacer todo si alguna operación falla
     await connection.rollback();
-      console.error("❌ ERROR EN LA TRANSACCIÓN (SE EJECUTÓ ROLLBACK):");
-      console.error("Mensaje:", error.message);
-      console.error("Código de Error SQL:", error.code);   // Ej: ER_NO_SUCH_TABLE, ER_BAD_FIELD_ERROR
-      console.error("Número de Error SQL:", error.errno); // Ej: 1146, 1054
-      console.error("SQL State:", error.sqlState);
+    console.error("❌ ERROR EN LA TRANSACCIÓN (SE EJECUTÓ ROLLBACK):");
+    console.error("Mensaje:", error.message);
+    console.error("Código de Error SQL:", error.code); 
+    console.error("Número de Error SQL:", error.errno); 
+    console.error("SQL State:", error.sqlState);
     throw error;
   } finally {
     // Liberar la conexión

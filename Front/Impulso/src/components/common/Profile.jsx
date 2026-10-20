@@ -1,7 +1,8 @@
-import Icon from "./icon";
-import Header from "../components/Header";
+import Icon from "./Icon";
+import Header from "./Header";
 
-import professors from "../data/professors";
+
+import professors from "../../data/professors";
 
 function Profile({ user, onLogout, profesorElegidoId }) {
   const profesor = professors.find((item) => item.id === profesorElegidoId);

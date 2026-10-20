@@ -44,10 +44,11 @@ app.get("/api/health", async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log(`Servidor en http://localhost:${PORT}`);
-});
+
 // ruta users
 app.use("/api/users", userRoutes);
 //Ruta login y register
 app.use("/api/auth", authRoutes);
+app.listen(PORT, () => {
+  console.log(`Servidor en http://localhost:${PORT}`);
+});

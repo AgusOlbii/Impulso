@@ -85,9 +85,17 @@ export const logout = (req, res) => {
 
 export const register = async (req, res) => {
   try {
-    const { name, email, password, rol } = req.body;
+    const { name, email, password, rol, phone, dni } = req.body;
 
-    const user = await authService.registerUser({ name, email, password, rol });
+    // Pasamos phone y dni al servicio de registro
+    const user = await authService.registerUser({ 
+      name, 
+      email, 
+      password, 
+      rol, 
+      phone, 
+      dni 
+    });
 
     return res.status(201).json({
       ok: true,

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import Header from "./Header";
-import Icon from "./icon";
+import Header from "../common/Header";
+import Icon from "../common/Icon";
 
 function PostularProfesor({ user }) {
   const [especialidad, setEspecialidad] = useState("");
