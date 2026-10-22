@@ -150,7 +150,7 @@ export default function App() {
                       <Route path="/create/routine" element={user.rol === 'profesor' ? (<CreateRoutine/>) : (<Unauthorized/>)}/>
                       <Route path="/students/directory" element={user.rol === "profesor" ? (<StudentsDirectory/>) : (<Unauthorized/>)}></Route>
                       {/* RUTAS PARA EL ADMIN */}
-                      <Route path="/admin" element={<Admin />} />
+                      <Route path="/admin" element={user.rol === 'admin' ? (<Admin />) : <Unauthorized/>} />
                       <Route path="/create/exercise" element={user.rol === 'admin' ? (<ExerciseCreator/>) : (<Unauthorized/>)}></Route>
                       {/* Cualquier ruta interna no encontrada vuelve al inicio */}
                       <Route path="*" element={<Navigate to="/" replace />} />
