@@ -1,21 +1,16 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import pool from "../config/db.js";
+import { UserModel } from "../models/user.model.js";
+import { CoachModel } from "../models/coach.model.js";
+import { StudentModel } from "../models/student.model.js";
+import { boolean } from "zod";
 
 export const loginUser = async (email, password) => {
-  // 1. Consulta SQL
-  const [users] = await pool.execute(
-    `SELECT id, name, email, password_hash, rol, activo
-     FROM users
-     WHERE email = ?
-     LIMIT 1`,
-    [email]
-  );
-
-  const user = users[0];
+  // 1. Buscar usuario usando el modelo (ya filtra por is_active = TRUE)
+  const user = await UserModel.findByEmail(email);
 
   // 2. Comprobar existencia y contraseña
-  if (!user || !user.activo || !(await bcrypt.compare(password, user.password_hash))) {
+  if (!user || !(await bcrypt.compare(password, user.password))) {
     throw new Error("INVALID_CREDENTIALS");
   }
 
@@ -31,6 +26,7 @@ export const loginUser = async (email, password) => {
     user: {
       id: user.id,
       name: user.name,
+      lastname: user.lastname,
       email: user.email,
       rol: user.rol,
     },
@@ -38,98 +34,63 @@ export const loginUser = async (email, password) => {
 };
 
 export const getUserById = async (userId) => {
-  const [users] = await pool.execute(
-    `SELECT id, name, email, rol, activo
-     FROM users
-     WHERE id = ?
-     LIMIT 1`,
-    [userId]
-  );
-
-  return users[0];
+  const user = await UserModel.findById(userId);
+  return user;
 };
 
-
-export const registerUser = async ({ name, email, password, rol, phone, dni }) => {
+export const registerUser = async ({ name, lastname, email, password, rol, phone, dni, is_active, image_url }) => {
   // 1. Normalizar los datos
   const cleanName = name.trim();
+  const cleanLastname = lastname ? lastname.trim() : "";
   const cleanEmail = email.trim().toLowerCase();
   const cleanPhone = String(phone ?? "").trim();
   const cleanDni = String(dni ?? "").trim();
+  const cleanIsActive = is_active ?? true;
 
   // 2. Validar el rol
-  const userRole = rol || "alumno";
+  const userRole = rol || "student";
 
-  if (!["alumno", "profesor"].includes(userRole)) {
+  if (!["student", "coach"].includes(userRole)) {
     throw new Error("INVALID_ROLE");
   }
 
   // 3. Verificar si el email ya existe
-  const [existingUsers] = await pool.execute(
-    "SELECT id FROM users WHERE email = ? LIMIT 1",
-    [cleanEmail]
-  );
-
-  if (existingUsers.length > 0) {
+  const existingUser = await UserModel.findByEmail(cleanEmail);
+  if (existingUser) {
     throw new Error("EMAIL_ALREADY_EXISTS");
   }
 
-  // 4. Encriptar la contraseña
+   // 4. Verificar si el email ya existe
+  const existingDNI = await UserModel.findByDni(cleanDni);
+  if (existingDNI) {
+    throw new Error("DNI_ALREADY_EXISTS");
+  }
+  // 5. Encriptar la contraseña
   const saltRounds = 10;
-  const passwordHash = await bcrypt.hash(password, saltRounds);
+  const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-  // 5. Iniciar la transacción
-  const connection = await pool.getConnection();
-
+  // 6. Crear el usuario y su perfil correspondiente
   try {
-    await connection.beginTransaction();
-
-    // Insertar el usuario incluyendo phone y dni
-    const [userResult] = await connection.execute(
-      `INSERT INTO users (name, phone, dni, email, password_hash, rol)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [cleanName, cleanPhone, cleanDni, cleanEmail, passwordHash, userRole]
-    );
-
-    const newUserId = userResult.insertId;
-
-    // Crear el perfil correspondiente
-    if (userRole === "profesor") {
-      await connection.execute(
-        `INSERT INTO professors (user_id, status)
-         VALUES (?, 'pending')`,
-        [newUserId]
-      );
-    } else if (userRole === "alumno") {
-      await connection.execute(
-        `INSERT INTO clients (user_id)
-         VALUES (?)`,
-        [newUserId]
-      );
-    }
-
-    // Confirmar todas las operaciones
-    await connection.commit();
-
-    return {
-      id: newUserId,
+    const newUser = await UserModel.create({
       name: cleanName,
+      lastname: cleanLastname,
       email: cleanEmail,
-      phone: cleanPhone,
-      dni: cleanDni,
+      password: hashedPassword,
       rol: userRole,
-    };
+      phone: cleanPhone || null,
+      dni: cleanDni,
+      is_active: cleanIsActive,
+      image_url: image_url || null,
+    });
+
+    // Crear el perfil específico para ESTUDIANTE
+    await StudentModel.create({ user_id: newUser.id });
+    
+
+    return newUser;
   } catch (error) {
-    // Deshacer todo si alguna operación falla
-    await connection.rollback();
-    console.error("❌ ERROR EN LA TRANSACCIÓN (SE EJECUTÓ ROLLBACK):");
+    console.error("❌ ERROR EN EL REGISTRO DE USUARIO:");
     console.error("Mensaje:", error.message);
-    console.error("Código de Error SQL:", error.code); 
-    console.error("Número de Error SQL:", error.errno); 
-    console.error("SQL State:", error.sqlState);
     throw error;
-  } finally {
-    // Liberar la conexión
-    connection.release();
   }
 };

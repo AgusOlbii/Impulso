@@ -128,7 +128,7 @@ return (
     </div>
 
     <p className="auth-help">
-      ¿Necesitás ayuda? <button type="button">Contactar a recepción</button>
+      ¿Necesitás ayuda? <button type="button">Soporte técnico</button>
     </p>
   </section>
 </main>

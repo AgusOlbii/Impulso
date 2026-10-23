@@ -171,7 +171,7 @@ export default function App() {
                       <Route
                         path="/rutina"
                         element={
-                          user.rol === "alumno" ? (
+                          user.rol === "student" ? (
                             <Routine profesorElegidoId={profesorElegidoId} />
                           ) : (
                             <Unauthorized />
@@ -181,7 +181,7 @@ export default function App() {
                       <Route
                         path="/postular/profesor"
                         element={
-                          user.rol === "alumno" ? (
+                          user.rol === "student" ? (
                             <PostularProfesor user={user} />
                           ) : (
                             <Unauthorized />
@@ -191,7 +191,7 @@ export default function App() {
                       <Route
                         path="/panel/profesor"
                         element={
-                          user.rol === "profesor" ? (
+                          user.rol === "coach" ? (
                             <Professor user={user} />
                           ) : (
                             <Unauthorized />
@@ -201,7 +201,7 @@ export default function App() {
                       <Route
                         path="/create/routine"
                         element={
-                          user.rol === "profesor" ? (
+                          user.rol === "coach" ? (
                             <CreateRoutine />
                           ) : (
                             <Unauthorized />
@@ -211,7 +211,7 @@ export default function App() {
                       <Route
                         path="/students/directory"
                         element={
-                          user.rol === "profesor" ? (
+                          user.rol === "coach" ? (
                             <StudentsDirectory />
                           ) : (
                             <Unauthorized />

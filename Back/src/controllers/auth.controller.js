@@ -87,7 +87,6 @@ export const register = async (req, res) => {
   try {
     const { name, email, password, rol, phone, dni } = req.body;
 
-    // Pasamos phone y dni al servicio de registro
     const user = await authService.registerUser({ 
       name, 
       email, 
@@ -99,7 +98,7 @@ export const register = async (req, res) => {
 
     return res.status(201).json({
       ok: true,
-      message: user.rol === "profesor" 
+      message: user.rol === "coach" 
         ? "Registro exitoso. Tu cuenta está pendiente de aprobación por un administrador."
         : "Usuario registrado con éxito",
       user,

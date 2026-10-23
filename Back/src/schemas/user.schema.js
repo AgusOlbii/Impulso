@@ -1,12 +1,20 @@
 import { z } from "zod";
 
-export const registerSchema = z.object({
-  name: z.string({ required_error: "El nombre es obligatorio" }).trim().min(1, "El nombre es obligatorio"),
-  dni: z.string({ required_error: "El DNI es obligatorio" }).trim().min(1, "El DNI es obligatorio"),
-  phone: z.string({ required_error: "El teléfono es obligatorio" }).trim().min(1, "El teléfono es obligatorio"),
-  email: z.string({ required_error: "El correo es obligatorio" }).email("El correo electrónico no tiene un formato válido"),
-  password: z.string({ required_error: "La contraseña es obligatoria" }).min(6, "La contraseña debe tener al menos 6 caracteres"),
-  rol: z.enum(["alumno", "profesor"], {
-    message: "El rol seleccionado no es válido para el registro público"
-  }).optional()
+export const registerUserSchema = z.object({
+  name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
+  lastname: z.string().min(2, "El apellido debe tener al menos 2 caracteres"),
+  email: z.string().email("Formato de email inválido"),
+  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
+  rol: z.enum(["student", "coach", "admin"]).default("student"),
+  phone: z.string().optional(),
+  dni: z.string().min(6, "DNI inválido"),
+  is_active: z.coerce.boolean().default(true).optional(),
+  image_url: z.string().url("URL de imagen inválida").optional(),
 });
+
+export const loginUserSchema = z.object({
+  email: z.string().email("Email inválido"),
+  password: z.string().min(1, "La contraseña es requerida"),
+});
+
+export const updateUserSchema = registerUserSchema.partial();
