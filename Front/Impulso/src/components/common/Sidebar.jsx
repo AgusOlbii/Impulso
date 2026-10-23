@@ -20,7 +20,7 @@ function Sidebar({ user }) {
 
       <nav className="sidebar-nav">
         {/* Navegación exclusiva para Alumnos */}
-        {user.rol === 'alumno' && studentNavigation.map((item) => (
+        {user.rol === 'student' && studentNavigation.map((item) => (
           <NavLink
             key={item.id}
             to={item.path}
@@ -44,7 +44,7 @@ function Sidebar({ user }) {
         ))}
 
         {/* Navegación para Profesores */}
-        {user.rol === 'profesor' && professorNavigation.map((item) => (
+        {user.rol === 'coach' && professorNavigation.map((item) => (
             <NavLink
               key={item.id}
               to={item.path}
@@ -61,11 +61,11 @@ function Sidebar({ user }) {
           to="/perfil" 
           className={({ isActive }) => `profile-mini ${isActive ? "active" : ""}`}
         >
-          <div className="avatar">JP</div>
+          <div className="avatar">{user.image_url}</div>
           <div>
             <div className="profile-name">{user.name}</div>
             <div className="profile-role">
-              {user.rol === 'admin' ? 'Administrador' : user.rol === 'profesor' ? 'Profesor' : 'Socio activo'}
+              {user.rol === 'admin' ? 'Administrador' : user.rol === 'coach' ? 'Profesor' : 'Alumno'}
             </div>
           </div>
         </NavLink>
