@@ -55,3 +55,32 @@ export async function register(userData) {
 
   return data;
 }
+
+export const updateProfile = async (user, formData) => {
+  try {
+    let endpoint = "";
+
+    // Decidimos la ruta según el rol del usuario
+    if (user.rol === "student") {
+      console.log('peticion a student')
+      endpoint = `/students/${user.id}/update`; 
+    } else if (user.rol === "coach") {
+      console.log('peticion a coach')
+      endpoint = `/coaches/${user.id}/update`;
+    } else {
+      // Para admin u otros roles que solo actualizan la tabla users
+      console.log('peticion a USER')
+      endpoint = `/users/${user.id}/update`;
+    }
+
+    const response = await request(endpoint, {
+      method: "PUT",
+      body: JSON.stringify(formData),
+    });
+
+    return response;
+  } catch (error) {
+    console.error("Error al actualizar perfil:", error.message);
+    throw error;
+  }
+}; 

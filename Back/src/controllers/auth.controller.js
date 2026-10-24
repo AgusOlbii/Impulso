@@ -52,7 +52,7 @@ export const me = async (req, res) => {
   try {
     const user = await authService.getUserById(req.user.id);
 
-    if (!user || !user.activo) {
+    if (!user || !user.is_active) {
       res.clearCookie("impulso_token", { ...cookieOptions, maxAge: undefined });
       return res.status(401).json({
         ok: false,
@@ -80,7 +80,6 @@ export const logout = (req, res) => {
     message: "Sesión cerrada correctamente",
   });
 };
-
 
 
 export const register = async (req, res) => {

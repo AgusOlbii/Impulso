@@ -7,12 +7,12 @@ import { registerUserSchema } from "../schemas/user.schema.js";
 
 const router = Router();
 
-// Registro (Ahora utiliza el esquema de validación y el middleware genérico)
-router.post("/register", validateSchema(registerUserSchema), register);
-
-// Login, Me, Logout
 router.post("/login", login);
-router.get("/me", authenticateToken, me);
+router.post("/register", validateSchema(registerUserSchema), register);
 router.post("/logout", logout);
+
+
+router.get("/me", authenticateToken, me);
+
 
 export default router;
