@@ -8,6 +8,9 @@ export const registerUserSchema = z.object({
   rol: z.enum(["student", "coach", "admin"]).default("student"),
   phone: z.string().optional(),
   dni: z.string().min(6, "DNI inválido"),
+  birthdate: z.string().refine((val) => !isNaN(Date.parse(val)), {
+    message: "Fecha de nacimiento inválida (esperado YYYY-MM-DD)",
+  }).optional(),
   is_active: z.coerce.boolean().default(true).optional(),
   image_url: z.string().url("URL de imagen inválida").optional(),
 });

@@ -115,7 +115,7 @@ export default function App() {
   if (checkingSession) {
     return <div className="app-loading">Verificando sesión...</div>;
   }
-
+  console.log(user)
   return (
     <BrowserRouter>
       <Routes>
@@ -163,6 +163,7 @@ export default function App() {
                         element={
                           <Profile
                             user={user}
+                            setUser={setUser}
                             onLogout={handleLogout}
                             profesorElegidoId={profesorElegidoId}
                           />

@@ -18,7 +18,7 @@ export const loginUser = async (email, password) => {
   const token = jwt.sign(
     { id: user.id, rol: user.rol },
     process.env.JWT_SECRET,
-    { expiresIn: "1h" }
+    { expiresIn: "7d" }
   );
 
   return {
@@ -34,17 +34,18 @@ export const loginUser = async (email, password) => {
 };
 
 export const getUserById = async (userId) => {
-  const user = await UserModel.findById(userId);
+  const user = await UserModel.findByIdWithRoleData(userId);
   return user;
 };
 
-export const registerUser = async ({ name, lastname, email, password, rol, phone, dni, is_active, image_url }) => {
+export const registerUser = async ({ name, lastname, email, password, rol, phone, dni, birthday, is_active, image_url }) => {
   // 1. Normalizar los datos
   const cleanName = name.trim();
   const cleanLastname = lastname ? lastname.trim() : "";
   const cleanEmail = email.trim().toLowerCase();
   const cleanPhone = String(phone ?? "").trim();
   const cleanDni = String(dni ?? "").trim();
+  const cleanBirthday = birthday && birthday.trim() !== "" ? birthday : null;
   const cleanIsActive = is_active ?? true;
 
   // 2. Validar el rol
@@ -79,6 +80,7 @@ export const registerUser = async ({ name, lastname, email, password, rol, phone
       rol: userRole,
       phone: cleanPhone || null,
       dni: cleanDni,
+      birthday: cleanBirthday || null,
       is_active: cleanIsActive,
       image_url: image_url || null,
     });
