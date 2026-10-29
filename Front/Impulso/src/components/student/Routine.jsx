@@ -7,19 +7,25 @@ import rutinasPorProfesor from "../../data/rutinasPorProfesor";
 
 function Routine({ profesorElegidoId }) {
   const navigate = useNavigate();
-  const [diaActivo, setDiaActivo] = useState("lunes");
+  const [diaActivo, setDiaActivo] = useState();
   const [completed, setCompleted] = useState([]);
 
   const profesor = professors.find((item) => item.id === profesorElegidoId);
   const rutinaSemanal = profesor
     ? rutinasPorProfesor[profesor.id]
     : null;
-  const dia = rutinaSemanal?.find((item) => item.id === diaActivo);
+  const dia =
+    diaActivo === null
+      ? null
+      : rutinaSemanal?.find((item) => item.id === diaActivo) ??
+        rutinaSemanal?.[0] ??
+        null;
   const totalDia = dia ? dia.ejercicios.length : 0;
   const hechosDia = dia
     ? dia.ejercicios.filter((ejercicio) => completed.includes(ejercicio.id))
         .length
     : 0;
+  const progreso = totalDia ? (hechosDia / totalDia) * 100 : 0;
 
   const toggleDia = (id) => {
     setDiaActivo((actual) => (actual === id ? null : id));
@@ -66,11 +72,16 @@ function Routine({ profesorElegidoId }) {
             Diseñada por {profesor.name} · {profesor.specialty}
           </p>
         </div>
-        <div className="routine-progress">
-          <strong>
-            {hechosDia}/{totalDia || 0}
-          </strong>
-          <span>ejercicios</span>
+        <div
+          className="routine-progress"
+          style={{ "--progress": `${progreso}%` }}
+        >
+          <div className="routine-progress-inner">
+            <strong>
+              {hechosDia}/{totalDia || 0}
+            </strong>
+            <span>ejercicios</span>
+          </div>
         </div>
       </div>
       <div className="routine-layout">
@@ -78,7 +89,7 @@ function Routine({ profesorElegidoId }) {
           <div className="section-heading compact">
             <div>
               <span className="eyebrow">SEMANA</span>
-              <h2>Lunes a viernes</h2>
+              <h2>Días de entrenamiento</h2>
             </div>
             <span className="duration">
               <Icon name="clock" size={17} /> 50–60 min
@@ -90,7 +101,7 @@ function Routine({ profesorElegidoId }) {
               <button
                 key={item.id}
                 type="button"
-                className={`routine-day ${diaActivo === item.id ? "active" : ""}`}
+                className={`routine-day ${dia?.id === item.id ? "active" : ""}`}
                 onClick={() => toggleDia(item.id)}
               >
                 {item.nombre}

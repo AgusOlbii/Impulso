@@ -3,9 +3,11 @@ import Header from "./Header";
 
 
 import professors from "../../data/professors";
+import { datosFisicosDe } from "../../data/datosPerfil";
 
 function Profile({ user, onLogout, profesorElegidoId }) {
   const profesor = professors.find((item) => item.id === profesorElegidoId);
+  const fisico = datosFisicosDe(user);
   return (
     <>
       <Header eyebrow="TU CUENTA" title="Mi perfil" />
@@ -39,6 +41,18 @@ function Profile({ user, onLogout, profesorElegidoId }) {
             <div>
               <span>Teléfono</span>
               <strong>{user.phone}</strong>
+            </div>
+            <div>
+              <span>Fecha de nacimiento</span>
+              <strong>{fisico.nacimiento}</strong>
+            </div>
+            <div>
+              <span>Altura</span>
+              <strong>{fisico.altura}</strong>
+            </div>
+            <div>
+              <span>Peso</span>
+              <strong>{fisico.peso}</strong>
             </div>
           </div>
         </section>

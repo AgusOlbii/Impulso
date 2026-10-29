@@ -43,12 +43,20 @@ function textoBoton(estado) {
 function Profesores({ user, profesorElegidoId, onElegir, onDejar }) {
   const [filter, setFilter] = useState("Todos");
   const [notice, setNotice] = useState("");
+  const [cambioPendiente, setCambioPendiente] = useState(null);
   const copy = contentByRol[user?.rol] || contentByRol.alumno;
   const socio = { id: user?.id, profesorId: profesorElegidoId };
+  const profesorActual = professors.find((item) => item.id === profesorElegidoId);
   const visibleCoaches =
     filter === "Todos"
       ? professors
       : professors.filter((coach) => coach.specialty === filter);
+
+  const contratar = (coach) => {
+    onElegir(coach.id);
+    setCambioPendiente(null);
+    setNotice(`Contrataste a ${coach.name}. Tu rutina ya está en Mi rutina.`);
+  };
 
   return (
     <>
@@ -162,8 +170,7 @@ function Profesores({ user, profesorElegidoId, onElegir, onDejar }) {
                           setNotice(`Dejaste de entrenar con ${coach.name}.`);
                           return;
                         }
-                        onElegir(coach.id);
-                        setNotice(`Contrataste a ${coach.name}. Tu rutina ya está en Mi rutina.`);
+                        setCambioPendiente(coach);
                       }}
                     >
                       {estado === "ya_elegido" ? (
@@ -183,6 +190,63 @@ function Profesores({ user, profesorElegidoId, onElegir, onDejar }) {
           );
         })}
       </section>
+
+      {cambioPendiente && (
+        <div
+          className="confirm-overlay"
+          onClick={() => setCambioPendiente(null)}
+        >
+          <div
+            className="confirm-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirm-change-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <span className="eyebrow">
+              {profesorActual ? "CAMBIO DE PROFESOR" : "CONTRATAR PROFESOR"}
+            </span>
+            <h3 id="confirm-change-title">
+              {profesorActual
+                ? "¿Cambiar de entrenador?"
+                : `¿Contratar a ${cambioPendiente.name}?`}
+            </h3>
+            <p>
+              {profesorActual ? (
+                <>
+                  Hoy entrenás con <strong>{profesorActual.name}</strong>. Si
+                  pasás a <strong>{cambioPendiente.name}</strong>, se reemplaza
+                  tu rutina semanal por la de esa persona.
+                </>
+              ) : (
+                <>
+                  Vas a entrenar con <strong>{cambioPendiente.name}</strong>{" "}
+                  ({cambioPendiente.specialty}). En Mi rutina vas a ver el plan
+                  semanal que armó para vos.
+                </>
+              )}
+            </p>
+            <div className="confirm-actions">
+              <button
+                type="button"
+                className="text-button"
+                onClick={() => setCambioPendiente(null)}
+              >
+                {profesorActual
+                  ? `Seguir con ${profesorActual.name.split(" ")[0]}`
+                  : "Cancelar"}
+              </button>
+              <button
+                type="button"
+                className="primary-button"
+                onClick={() => contratar(cambioPendiente)}
+              >
+                {profesorActual ? "Sí, cambiar" : "Sí, contratar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

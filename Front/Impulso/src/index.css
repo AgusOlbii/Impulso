@@ -169,7 +169,8 @@ h1 { margin-bottom: 0; font-size: 30px; line-height: 1.1; letter-spacing: -.04em
 .routine-banner::after { content: ""; position: absolute; width: 260px; height: 260px; right: -65px; top: -115px; border: 1px solid rgba(200,240,77,.16); border-radius: 50%; box-shadow: 0 0 0 38px rgba(200,240,77,.025), 0 0 0 78px rgba(200,240,77,.02); }
 .routine-banner h2 { font-size: 30px; margin: 0 0 7px; letter-spacing: -.04em; }
 .routine-banner p { margin: 0; color: rgba(255,255,255,.58); font-size: 10px; }
-.routine-progress { position: relative; z-index: 1; width: 90px; height: 90px; border-radius: 50%; border: 5px solid var(--lime); border-right-color: rgba(255,255,255,.14); display: grid; place-content: center; text-align: center; }
+.routine-progress { position: relative; z-index: 1; width: 90px; height: 90px; border-radius: 50%; padding: 5px; border: 0; background: conic-gradient(var(--lime) var(--progress, 0%), rgba(255,255,255,.14) 0); display: grid; place-items: center; text-align: center; }
+.routine-progress-inner { width: 100%; height: 100%; border-radius: 50%; background: var(--green); display: grid; place-content: center; }
 .routine-progress strong { font-size: 22px; }
 .routine-progress span { font-size: 7px; color: rgba(255,255,255,.55); text-transform: uppercase; letter-spacing: .1em; }
 .routine-layout { display: grid; grid-template-columns: 1fr 260px; gap: 22px; margin-top: 28px; }
@@ -252,6 +253,11 @@ h1 { margin-bottom: 0; font-size: 30px; line-height: 1.1; letter-spacing: -.04em
 .add-exercise { justify-self: start; display: flex; align-items: center; gap: 7px; border: 0; background: transparent; color: var(--green); font-size: 9px; font-weight: 800; padding: 8px; cursor: pointer; }
 .builder-actions { justify-content: flex-end; gap: 18px; margin-top: 18px; }
 .success-message { display: flex; align-items: center; gap: 9px; margin-top: 14px; border-radius: 10px; padding: 12px 15px; color: #315f3d; background: #e9f3e6; font-size: 9px; }
+.confirm-overlay { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 24px; background: rgba(10, 27, 22, .55); }
+.confirm-modal { width: min(420px, 100%); padding: 26px 24px; border-radius: 16px; background: white; box-shadow: 0 18px 50px rgba(10, 27, 22, .22); }
+.confirm-modal h3 { margin: 8px 0 10px; font-size: 20px; letter-spacing: -.03em; }
+.confirm-modal p { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.6; }
+.confirm-actions { display: flex; justify-content: flex-end; align-items: center; gap: 14px; margin-top: 22px; }
 .professor-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 18px 0; }
 .professor-stats article { min-width: 0; display: flex; align-items: center; gap: 12px; padding: 17px; background: white; border: 1px solid var(--line); border-radius: 13px; }
 .professor-stats .stat-icon.alert { background: #fae9e3; color: #a85946; }
@@ -649,7 +655,8 @@ h1 { margin-bottom: 0; font-size: 30px; line-height: 1.1; letter-spacing: -.04em
   .book-button { grid-column: 3; }
   .routine-banner { padding: 28px 24px; min-height: 210px; }
   .routine-banner h2 { font-size: 26px; max-width: 220px; }
-  .routine-progress { width: 70px; height: 70px; flex: none; }
+  .routine-progress { width: 70px; height: 70px; flex: none; padding: 4px; }
+  .confirm-actions { flex-wrap: wrap; }
   .exercise { grid-template-columns: 38px 1fr 55px 16px; padding: 13px 12px; gap: 9px; }
   .muscle { display: none; }
   .profile-hero { grid-template-columns: auto 1fr; padding: 24px 20px; }
