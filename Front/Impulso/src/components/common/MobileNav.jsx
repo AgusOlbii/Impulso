@@ -9,7 +9,7 @@ function MobileNav({ user }) {
   return (
     <nav className="mobile-nav" aria-label="Navegación móvil">
       {/* Navegacion para Alumnos */}
-      {user.rol === "alumno" && studentNavigation.map((item) => (
+      {user.rol === "student" && studentNavigation.map((item) => (
         <NavLink
           key={item.id}
           to={item.path}
@@ -32,7 +32,7 @@ function MobileNav({ user }) {
       ))}
 
       {/*Navegacion para Profesores*/}
-      {user.rol === "profesor" && professorNavigation.map((item) => (
+      {user.rol === "coach" && professorNavigation.map((item) => (
           <NavLink
             key={item.id}
             to={item.path}

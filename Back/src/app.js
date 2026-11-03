@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import pool from "./config/db.js";
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
+import studentRoutes from "./routes/student.routes.js";
 
 dotenv.config();
 
@@ -39,16 +40,19 @@ app.get("/api/health", async (req, res) => {
     });
   }
 });
-
-
-
 const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Servidor en http://localhost:${PORT}`);
+});
 
 
 // ruta users
 app.use("/api/users", userRoutes);
 //Ruta login y register
 app.use("/api/auth", authRoutes);
-app.listen(PORT, () => {
-  console.log(`Servidor en http://localhost:${PORT}`);
-});
+
+
+//Rutas de student
+app.use("/api/students", studentRoutes)
+

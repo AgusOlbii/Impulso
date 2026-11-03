@@ -52,7 +52,7 @@ export const me = async (req, res) => {
   try {
     const user = await authService.getUserById(req.user.id);
 
-    if (!user || !user.activo) {
+    if (!user || !user.is_active) {
       res.clearCookie("impulso_token", { ...cookieOptions, maxAge: undefined });
       return res.status(401).json({
         ok: false,
@@ -82,12 +82,10 @@ export const logout = (req, res) => {
 };
 
 
-
 export const register = async (req, res) => {
   try {
     const { name, email, password, rol, phone, dni } = req.body;
 
-    // Pasamos phone y dni al servicio de registro
     const user = await authService.registerUser({ 
       name, 
       email, 
@@ -99,7 +97,7 @@ export const register = async (req, res) => {
 
     return res.status(201).json({
       ok: true,
-      message: user.rol === "profesor" 
+      message: user.rol === "coach" 
         ? "Registro exitoso. Tu cuenta está pendiente de aprobación por un administrador."
         : "Usuario registrado con éxito",
       user,

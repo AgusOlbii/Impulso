@@ -11,14 +11,15 @@ function RegisterForm({ onRegister }) {
     const formData = new FormData(event.target);
     const formValues = Object.fromEntries(formData.entries());
 
-    // 2. Mapear y adaptar los datos para el Backend (incluyendo phone y dni)
+    // 2. Mapear y adaptar los datos para el Backend
     const payload = {
-      name: `${formValues.name} ${formValues.surname}`.trim(),
+      name: formValues.name,
+      lastname: formValues.surname,
       phone: formValues.phone,
       dni: formValues.dni,
       email: formValues.email,
       password: formValues.password,
-      rol: formValues.rol || "alumno",
+      rol: "student",
     };
 
     console.log("📤 Enviando datos desde RegisterForm:", payload);
@@ -78,14 +79,6 @@ function RegisterForm({ onRegister }) {
             required
           />
         </div>
-      </label>
-
-      <label>
-        <span style={{fontSize:'12px'}}>Tipo de cuenta</span>
-        <select name="rol" defaultValue="alumno">
-          <option value="alumno">Alumno / Socio</option>
-          <option value="profesor">Profesor</option>
-        </select>
       </label>
 
       <label>

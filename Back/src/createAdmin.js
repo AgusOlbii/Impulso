@@ -7,11 +7,13 @@ dotenv.config();
 
 async function createAdmin() {
   try {
-    const name = "Administrador";
-    const email = "agustinolbinsky@hotmail.com";
+    const name = "Agustin";
+    const lastname = "Olbinsky"
+    const email = "admin@admin.com";
+    const dni = 45265436;
     const password = process.env.ADMIN_PASSWORD;
 
-    if (!password || password.length < 12) {
+    if (!password || password.length < 2) {
       throw new Error(
         "Configurá ADMIN_PASSWORD con al menos 12 caracteres en .env"
       );
@@ -30,9 +32,9 @@ async function createAdmin() {
     const passwordHash = await bcrypt.hash(password, 12);
 
     await pool.execute(
-      `INSERT INTO users (name, email, password_hash, rol)
-       VALUES (?, ?, ?, ?)`,
-      [name, email, passwordHash, "admin"]
+      `INSERT INTO users (name, lastname, email, password, rol, dni)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [name, lastname, email, passwordHash, "admin", dni]
     );
 
     console.log("Administrador creado correctamente.");
