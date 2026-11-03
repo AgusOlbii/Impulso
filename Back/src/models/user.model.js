@@ -11,7 +11,7 @@ export class UserModel {
     return { id: result.insertId, name, lastname, email, rol };
   }
 
-  // Buscar usuario por Email 
+  // Buscar usuario por Email (verificacion de sesion con email)
   static async findByEmail(email) {
     const [rows] = await pool.query(
       `SELECT * FROM users WHERE email = ? AND is_active = TRUE`,
@@ -49,7 +49,7 @@ export class UserModel {
 
   // Actualizar datos de usuario
  static async update(userId, fields) {
-  // 1. Consultamos el rol del usuario para saber qué tabla específica actualizar
+  //Consultamos el rol del usuario para saber qué tabla específica actualizar
   const [userRows] = await pool.query(
     "SELECT rol FROM users WHERE id = ?",
     [userId]
@@ -88,7 +88,14 @@ export class UserModel {
   }
   return true;
 }
-
+// Actualizar rol del usuario
+static async updateRole(userId, newRole) {
+  const [result] = await pool.query(
+    "UPDATE users SET rol = ? WHERE id = ?",
+    [newRole, userId]
+  );
+  return result;
+}
   // Cambiar estado activo/inactivo (Desactivar cuenta)
   static async toggleStatus(id, isActive) {
     const [result] = await pool.query(
@@ -100,7 +107,7 @@ export class UserModel {
 
   // Busca los datos de la tabla user y de la tabla del rol correspondiente
   static async findByIdWithRoleData(userId) {
-    // 1. Buscamos primero los datos base del usuario en la tabla 'users'
+    //Buscamos primero los datos base del usuario en la tabla 'users'
     const [userRows] = await pool.query(
       "SELECT id, name, lastname, email, rol, phone, dni, birthday, image_url, is_active, created_at FROM users WHERE id = ?",
       [userId]
@@ -109,7 +116,7 @@ export class UserModel {
     if (userRows.length === 0) return null;
     const user = userRows[0];
 
-    // 2. Evaluamos el rol para traer los datos específicos de su tabla correspondiente
+    //Evaluamos el rol para traer los datos específicos de su tabla correspondiente
     if (user.rol === "student") {
       const [studentRows] = await pool.query(
         "SELECT id AS student_id, weight, height, goal, medical_notes FROM students WHERE user_id = ?",
@@ -123,7 +130,7 @@ export class UserModel {
     } 
     else if (user.rol === "coach") {
       const [coachRows] = await pool.query(
-        "SELECT id AS coach_id, specialization, experience_years FROM coaches WHERE user_id = ?",
+        "SELECT id AS coach_id, specialty, experience FROM coaches WHERE user_id = ?",
         [userId]
       );
       

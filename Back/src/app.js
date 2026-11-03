@@ -6,6 +6,8 @@ import pool from "./config/db.js";
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import studentRoutes from "./routes/student.routes.js";
+import coachApplicationRoutes from './routes/coachApplication.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 
 dotenv.config();
 
@@ -55,4 +57,7 @@ app.use("/api/auth", authRoutes);
 
 //Rutas de student
 app.use("/api/students", studentRoutes)
-
+// Ruta aplicaciones a coach
+app.use('/api/coach-applications', coachApplicationRoutes);
+//rutas admin
+app.use('/api/admin', adminRoutes);

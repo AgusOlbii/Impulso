@@ -212,7 +212,7 @@ export default function App() {
                       <Route
                         path="/students/directory"
                         element={
-                          user.rol === "coach" ? (
+                          user.rol === "admin" ? (
                             <StudentsDirectory />
                           ) : (
                             <Unauthorized />

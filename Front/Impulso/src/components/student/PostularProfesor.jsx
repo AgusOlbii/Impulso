@@ -1,15 +1,18 @@
 import { useState } from "react";
 import Header from "../common/Header";
 import Icon from "../common/Icon";
+import { coachService } from "../../services/coach.service"; 
 
 function PostularProfesor({ user }) {
   const [especialidad, setEspecialidad] = useState("");
   const [experiencia, setExperiencia] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [enviado, setEnviado] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const enviarFormulario = (e) => {
+
+  const enviarFormulario = async (e) => {
     e.preventDefault();
 
     if (!especialidad || !experiencia || !descripcion) {
@@ -17,19 +20,24 @@ function PostularProfesor({ user }) {
       return;
     }
 
-    const solicitud = {
-      usuarioId: user?.id,
-      nombre: user?.name,
-      email: user?.email,
-      especialidad,
-      experiencia,
-      descripcion,
-      estado: "pendiente",
-    };
+    try {
+      setLoading(true);
+      setError("");
 
-    console.log("Solicitud de profesor (no se envía al servidor):", solicitud);
-    setError("");
-    setEnviado(true);
+      const payload = {
+        specialty: especialidad,
+        experience: Number(experiencia),
+        description: descripcion,
+      };
+
+      await coachService.sendApplication(payload);
+
+      setEnviado(true);
+    } catch (err) {
+      setError(err.message || "Hubo un error al enviar la solicitud al servidor.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -42,8 +50,7 @@ function PostularProfesor({ user }) {
           <h2>Sumate al equipo, {user?.name || "socio"}.</h2>
           <p>
             Ya tenemos tu nombre y tu email de la cuenta. Completá tu perfil
-            profesional. La solicitud queda registrada acá; no se manda a
-            ningún servidor.
+            profesional para enviarlo a revisión del administrador.
           </p>
         </div>
       </section>
@@ -53,8 +60,7 @@ function PostularProfesor({ user }) {
           <div className="success-message">
             <Icon name="check" size={18} />
             <span>
-              Solicitud lista. Revisamos tu perfil. Te vamos a avisar cuando el
-              admin la vea.
+              ¡Solicitud enviada con éxito! Revisamos tu perfil y te avisaremos cuando sea aprobada.
             </span>
           </div>
         ) : (
@@ -102,8 +108,8 @@ function PostularProfesor({ user }) {
               />
             </label>
 
-            <button className="primary-button" type="submit">
-              Enviar solicitud
+            <button className="primary-button" type="submit" disabled={loading}>
+              {loading ? "Enviando..." : "Enviar solicitud"}
               <Icon name="arrow" size={16} />
             </button>
           </form>

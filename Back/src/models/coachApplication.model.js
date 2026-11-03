@@ -45,6 +45,7 @@ export class CoachApplicationModel {
     return rows[0];
   }
 
+
   // Cambiar el estado de la solicitud (Aprobar o Rechazar)
   static async updateStatus(id, status) {
     const [result] = await pool.query(

@@ -49,7 +49,7 @@ export class StudentModel {
 //Actualizar datos de la tabla students y sus respectivos campos en tabl user
 static async update(studentId, fields) {
   const [studentRows] = await pool.query(
-    "SELECT user_id FROM students WHERE id = ?",
+    "SELECT user_id FROM students WHERE user_id = ?",
     [studentId]
   );
 
