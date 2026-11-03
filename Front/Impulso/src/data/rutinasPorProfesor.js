@@ -1,30 +1,30 @@
-const diasNombre = [
-  { id: "lunes", nombre: "Lunes" },
-  { id: "martes", nombre: "Martes" },
-  { id: "miercoles", nombre: "Miércoles" },
-  { id: "jueves", nombre: "Jueves" },
-  { id: "viernes", nombre: "Viernes" },
-];
+const nombresDia = {
+  lunes: "Lunes",
+  martes: "Martes",
+  miercoles: "Miércoles",
+  jueves: "Jueves",
+  viernes: "Viernes",
+  sabado: "Sábado",
+  domingo: "Domingo",
+};
 
 function armarSemana(profesorId, dias) {
-  return diasNombre.map((dia, index) => {
-    const data = dias[index];
-    return {
-      id: dia.id,
-      nombre: dia.nombre,
-      titulo: data.titulo,
-      ejercicios: data.ejercicios.map((ejercicio, orden) => ({
-        id: `${profesorId}-${dia.id}-${orden + 1}`,
-        number: String(orden + 1).padStart(2, "0"),
-        ...ejercicio,
-      })),
-    };
-  });
+  return dias.map((data) => ({
+    id: data.id,
+    nombre: nombresDia[data.id],
+    titulo: data.titulo,
+    ejercicios: data.ejercicios.map((ejercicio, orden) => ({
+      id: `${profesorId}-${data.id}-${orden + 1}`,
+      number: String(orden + 1).padStart(2, "0"),
+      ...ejercicio,
+    })),
+  }));
 }
 
 const rutinasPorProfesor = {
   1: armarSemana(1, [
     {
+      id: "lunes",
       titulo: "Fuerza · tren inferior",
       ejercicios: [
         { name: "Sentadilla con barra", detail: "4 x 6", weight: "60 kg", muscle: "Piernas" },
@@ -32,6 +32,7 @@ const rutinasPorProfesor = {
       ],
     },
     {
+      id: "martes",
       titulo: "Fuerza · tren superior",
       ejercicios: [
         { name: "Press banca", detail: "5 x 5", weight: "55 kg", muscle: "Pecho" },
@@ -39,6 +40,7 @@ const rutinasPorProfesor = {
       ],
     },
     {
+      id: "miercoles",
       titulo: "Fuerza · posterior",
       ejercicios: [
         { name: "Hip thrust", detail: "4 x 8", weight: "80 kg", muscle: "Glúteos" },
@@ -46,6 +48,7 @@ const rutinasPorProfesor = {
       ],
     },
     {
+      id: "jueves",
       titulo: "Fuerza · empuje",
       ejercicios: [
         { name: "Press militar", detail: "4 x 6", weight: "30 kg", muscle: "Hombros" },
@@ -53,6 +56,7 @@ const rutinasPorProfesor = {
       ],
     },
     {
+      id: "viernes",
       titulo: "Fuerza · técnica liviana",
       ejercicios: [
         { name: "Sentadilla goblet", detail: "3 x 10", weight: "16 kg", muscle: "Piernas" },
@@ -62,6 +66,7 @@ const rutinasPorProfesor = {
   ]),
   2: armarSemana(2, [
     {
+      id: "lunes",
       titulo: "Cardio · intervalos",
       ejercicios: [
         { name: "Bici 40/20", detail: "12 rondas", weight: "—", muscle: "Cardio" },
@@ -69,6 +74,7 @@ const rutinasPorProfesor = {
       ],
     },
     {
+      id: "martes",
       titulo: "Cardio · resistencia",
       ejercicios: [
         { name: "Cinta inclinada", detail: "30 min", weight: "—", muscle: "Cardio" },
@@ -76,6 +82,7 @@ const rutinasPorProfesor = {
       ],
     },
     {
+      id: "jueves",
       titulo: "Cardio · HIIT",
       ejercicios: [
         { name: "Burpees", detail: "5 x 10", weight: "—", muscle: "Full body" },
@@ -83,6 +90,7 @@ const rutinasPorProfesor = {
       ],
     },
     {
+      id: "viernes",
       titulo: "Cardio · bajo impacto",
       ejercicios: [
         { name: "Elíptico", detail: "25 min", weight: "—", muscle: "Cardio" },
@@ -90,6 +98,7 @@ const rutinasPorProfesor = {
       ],
     },
     {
+      id: "sabado",
       titulo: "Cardio · cierre de semana",
       ejercicios: [
         { name: "Remo máquina", detail: "20 min", weight: "—", muscle: "Cardio" },
@@ -99,6 +108,7 @@ const rutinasPorProfesor = {
   ]),
   3: armarSemana(3, [
     {
+      id: "lunes",
       titulo: "Hipertrofia · piernas",
       ejercicios: [
         { name: "Prensa", detail: "4 x 10", weight: "120 kg", muscle: "Piernas" },
@@ -106,6 +116,7 @@ const rutinasPorProfesor = {
       ],
     },
     {
+      id: "martes",
       titulo: "Hipertrofia · pecho",
       ejercicios: [
         { name: "Press inclinado", detail: "4 x 10", weight: "28 kg", muscle: "Pecho" },
@@ -113,6 +124,7 @@ const rutinasPorProfesor = {
       ],
     },
     {
+      id: "miercoles",
       titulo: "Hipertrofia · espalda",
       ejercicios: [
         { name: "Jalón al pecho", detail: "4 x 10", weight: "45 kg", muscle: "Espalda" },
@@ -120,6 +132,7 @@ const rutinasPorProfesor = {
       ],
     },
     {
+      id: "jueves",
       titulo: "Hipertrofia · hombros",
       ejercicios: [
         { name: "Vuelos laterales", detail: "4 x 12", weight: "8 kg", muscle: "Hombros" },
@@ -127,15 +140,25 @@ const rutinasPorProfesor = {
       ],
     },
     {
+      id: "viernes",
       titulo: "Hipertrofia · brazos",
       ejercicios: [
         { name: "Curl barra", detail: "3 x 10", weight: "20 kg", muscle: "Bíceps" },
         { name: "Extensión de tríceps", detail: "3 x 12", weight: "18 kg", muscle: "Tríceps" },
       ],
     },
+    {
+      id: "sabado",
+      titulo: "Hipertrofia · full body liviano",
+      ejercicios: [
+        { name: "Sentadilla goblet", detail: "3 x 12", weight: "16 kg", muscle: "Piernas" },
+        { name: "Remo sentado", detail: "3 x 12", weight: "35 kg", muscle: "Espalda" },
+      ],
+    },
   ]),
   4: armarSemana(4, [
     {
+      id: "martes",
       titulo: "Funcional · tren inferior",
       ejercicios: [
         { name: "Sentadilla a una pierna", detail: "3 x 8", weight: "Cuerpo", muscle: "Piernas" },
@@ -143,6 +166,7 @@ const rutinasPorProfesor = {
       ],
     },
     {
+      id: "jueves",
       titulo: "Funcional · empuje",
       ejercicios: [
         { name: "Flexiones", detail: "4 x 12", weight: "Cuerpo", muscle: "Pecho" },
@@ -150,6 +174,7 @@ const rutinasPorProfesor = {
       ],
     },
     {
+      id: "viernes",
       titulo: "Funcional · core",
       ejercicios: [
         { name: "Plancha", detail: "4 x 40 seg", weight: "—", muscle: "Core" },
@@ -157,6 +182,7 @@ const rutinasPorProfesor = {
       ],
     },
     {
+      id: "sabado",
       titulo: "Funcional · full body",
       ejercicios: [
         { name: "Thruster", detail: "4 x 8", weight: "20 kg", muscle: "Full body" },
@@ -164,6 +190,7 @@ const rutinasPorProfesor = {
       ],
     },
     {
+      id: "domingo",
       titulo: "Funcional · movilidad activa",
       ejercicios: [
         { name: "World's greatest stretch", detail: "3 x 6", weight: "—", muscle: "Movilidad" },
@@ -173,6 +200,7 @@ const rutinasPorProfesor = {
   ]),
   5: armarSemana(5, [
     {
+      id: "lunes",
       titulo: "WOD · squat bias",
       ejercicios: [
         { name: "Front squat", detail: "5 x 5", weight: "50 kg", muscle: "Piernas" },
@@ -180,6 +208,7 @@ const rutinasPorProfesor = {
       ],
     },
     {
+      id: "miercoles",
       titulo: "WOD · pull",
       ejercicios: [
         { name: "Dominadas", detail: "5 x 5", weight: "Cuerpo", muscle: "Espalda" },
@@ -187,6 +216,7 @@ const rutinasPorProfesor = {
       ],
     },
     {
+      id: "viernes",
       titulo: "WOD · metcon",
       ejercicios: [
         { name: "Wall ball", detail: "AMRAP 12 min", weight: "6 kg", muscle: "Full body" },
@@ -194,13 +224,7 @@ const rutinasPorProfesor = {
       ],
     },
     {
-      titulo: "WOD · push",
-      ejercicios: [
-        { name: "Push press", detail: "5 x 5", weight: "35 kg", muscle: "Hombros" },
-        { name: "Burpee over bar", detail: "3 x 10", weight: "—", muscle: "Cardio" },
-      ],
-    },
-    {
+      id: "sabado",
       titulo: "WOD · engine",
       ejercicios: [
         { name: "Assault bike", detail: "10 cal x 6", weight: "—", muscle: "Cardio" },
@@ -210,6 +234,7 @@ const rutinasPorProfesor = {
   ]),
   6: armarSemana(6, [
     {
+      id: "lunes",
       titulo: "Movilidad · cadera",
       ejercicios: [
         { name: "90/90 hip switch", detail: "3 x 8", weight: "—", muscle: "Cadera" },
@@ -217,6 +242,7 @@ const rutinasPorProfesor = {
       ],
     },
     {
+      id: "miercoles",
       titulo: "Movilidad · hombros",
       ejercicios: [
         { name: "Circulos de hombro", detail: "3 x 12", weight: "—", muscle: "Hombros" },
@@ -224,6 +250,7 @@ const rutinasPorProfesor = {
       ],
     },
     {
+      id: "viernes",
       titulo: "Movilidad · columna",
       ejercicios: [
         { name: "Gato-vaca", detail: "3 x 10", weight: "—", muscle: "Columna" },
@@ -231,13 +258,7 @@ const rutinasPorProfesor = {
       ],
     },
     {
-      titulo: "Movilidad · tobillos",
-      ejercicios: [
-        { name: "Dorsiflexión en pared", detail: "3 x 10", weight: "—", muscle: "Tobillos" },
-        { name: "Sentadilla profunda sostenida", detail: "3 x 40 seg", weight: "—", muscle: "Cadera" },
-      ],
-    },
-    {
+      id: "domingo",
       titulo: "Movilidad · flujo suave",
       ejercicios: [
         { name: "Saludo al sol adaptado", detail: "5 vueltas", weight: "—", muscle: "Full body" },

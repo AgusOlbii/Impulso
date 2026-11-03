@@ -30,7 +30,7 @@ function Professor({ user }) {
   //Instancio el useNavigate y luego creo el handleClick para poder ir a la ruta /students/directory
   const navigate = useNavigate();
   const handleClick = () => {
-    // Aquí pones exactamente el mismo path que definiste en App.jsx (por ejemplo, '/profesores' o '/detalle')
+    // Aca pones exactamente el mismo path que definiste en App.jsx (por ejemplo, '/profesores' o '/detalle')
     navigate('/students/directory');
   };
 
