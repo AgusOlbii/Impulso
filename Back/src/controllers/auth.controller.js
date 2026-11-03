@@ -84,10 +84,11 @@ export const logout = (req, res) => {
 
 export const register = async (req, res) => {
   try {
-    const { name, email, password, rol, phone, dni } = req.body;
+    const { name, lastname, email, password, rol, phone, dni } = req.body;
 
     const user = await authService.registerUser({ 
-      name, 
+      name,
+      lastname,
       email, 
       password, 
       rol, 

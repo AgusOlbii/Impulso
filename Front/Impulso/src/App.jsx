@@ -13,7 +13,7 @@ import Professor from "./components/professor/Professor";
 import StudentsDirectory from "./components/professor/StudentsDirectory";
 import PostularProfesor from "./components/student/PostularProfesor";
 import Routine from "./components/student/Routine";
-import Unauthorized from "./components/Unauthorized";
+import { ProtectedRoute } from "./ProtectedRoute";
 import {
   login,
   getCurrentUser,
@@ -117,8 +117,134 @@ export default function App() {
   }
   console.log(user)
   return (
+    // <BrowserRouter>
+    //   <Routes>
+    //     <Route
+    //       path="/login"
+    //       element={
+    //         !user ? (
+    //           <AuthLayout
+    //             onEnter={handleLogin}
+    //             onRegister={handleRegister}
+    //             error={authError}
+    //             loading={loading}
+    //           />
+    //         ) : (
+    //           <Navigate to="/" replace />
+    //         )
+    //       }
+    //     />
+
+    //     {!user ? (
+    //       <Route path="*" element={<Navigate to="/login" replace />} />
+    //     ) : (
+    //       <Route
+    //         path="*"
+    //         element={
+    //           <div className="app">
+    //             <Sidebar user={user} />
+    //             <main className="main-content">
+    //               <div className="content-container">
+    //                 <Routes>
+    //                   <Route path="/" element={<Home user={user} />} />
+    //                   <Route
+    //                     path="/profesores"
+    //                     element={
+    //                       <Profesores
+    //                         user={user}
+    //                         profesorElegidoId={profesorElegidoId}
+    //                         onElegir={elegirProfesor}
+    //                         onDejar={dejarProfesor}
+    //                       />
+    //                     }
+    //                   />
+    //                   <Route
+    //                     path="/perfil"
+    //                     element={
+    //                       <Profile
+    //                         user={user}
+    //                         setUser={setUser}
+    //                         onLogout={handleLogout}
+    //                         profesorElegidoId={profesorElegidoId}
+    //                       />
+    //                     }
+    //                   />
+    //                   <Route
+    //                     path="/rutina"
+    //                     element={
+    //                       user.rol === "student" ? (
+    //                         <Routine profesorElegidoId={profesorElegidoId} />
+    //                       ) : (
+    //                         <Unauthorized />
+    //                       )
+    //                     }
+    //                   />
+    //                   <Route
+    //                     path="/postular/profesor"
+    //                     element={
+    //                       user.rol === "student" ? (
+    //                         <PostularProfesor user={user} />
+    //                       ) : (
+    //                         <Unauthorized />
+    //                       )
+    //                     }
+    //                   />
+    //                   <Route
+    //                     path="/panel/profesor"
+    //                     element={
+    //                       user.rol === "coach" ? (
+    //                         <Professor user={user} />
+    //                       ) : (
+    //                         <Unauthorized />
+    //                       )
+    //                     }
+    //                   />
+    //                   <Route
+    //                     path="/create/routine"
+    //                     element={
+    //                       user.rol === "coach" ? (
+    //                         <CreateRoutine />
+    //                       ) : (
+    //                         <Unauthorized />
+    //                       )
+    //                     }
+    //                   />
+    //                   <Route
+    //                     path="/students/directory"
+    //                     element={
+    //                       user.rol === "admin" ? (
+    //                         <StudentsDirectory />
+    //                       ) : (
+    //                         <Unauthorized />
+    //                       )
+    //                     }
+    //                   />
+    //                   <Route path="/admin" element={<Admin />} />
+    //                   <Route
+    //                     path="/create/exercise"
+    //                     element={
+    //                       user.rol === "admin" ? (
+    //                         <ExerciseCreator />
+    //                       ) : (
+    //                         <Unauthorized />
+    //                       )
+    //                     }
+    //                   />
+    //                   <Route path="*" element={<Navigate to="/" replace />} />
+    //                 </Routes>
+    //               </div>
+    //             </main>
+    //             <MobileNav user={user} />
+    //           </div>
+    //         }
+    //       />
+    //     )}
+    //   </Routes>
+    // </BrowserRouter>
+
     <BrowserRouter>
       <Routes>
+        {/* Ruta pública de Login */}
         <Route
           path="/login"
           element={
@@ -135,9 +261,8 @@ export default function App() {
           }
         />
 
-        {!user ? (
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        ) : (
+        {/* Rutas Protegidas que comparten el Layout principal */}
+        <Route element={<ProtectedRoute user={user} />}>
           <Route
             path="*"
             element={
@@ -169,67 +294,24 @@ export default function App() {
                           />
                         }
                       />
-                      <Route
-                        path="/rutina"
-                        element={
-                          user.rol === "student" ? (
-                            <Routine profesorElegidoId={profesorElegidoId} />
-                          ) : (
-                            <Unauthorized />
-                          )
-                        }
-                      />
-                      <Route
-                        path="/postular/profesor"
-                        element={
-                          user.rol === "student" ? (
-                            <PostularProfesor user={user} />
-                          ) : (
-                            <Unauthorized />
-                          )
-                        }
-                      />
-                      <Route
-                        path="/panel/profesor"
-                        element={
-                          user.rol === "coach" ? (
-                            <Professor user={user} />
-                          ) : (
-                            <Unauthorized />
-                          )
-                        }
-                      />
-                      <Route
-                        path="/create/routine"
-                        element={
-                          user.rol === "coach" ? (
-                            <CreateRoutine />
-                          ) : (
-                            <Unauthorized />
-                          )
-                        }
-                      />
-                      <Route
-                        path="/students/directory"
-                        element={
-                          user.rol === "admin" ? (
-                            <StudentsDirectory />
-                          ) : (
-                            <Unauthorized />
-                          )
-                        }
-                      />
-                      <Route path="/admin" element={<Admin />} />
-                      <Route
-                        path="/create/exercise"
-                        element={
-                          user.rol === "admin" ? (
-                            <ExerciseCreator />
-                          ) : (
-                            <Unauthorized />
-                          )
-                        }
-                      />
+
+                      {/* Rutas protegidas por rol */}
+                      <Route element={<ProtectedRoute user={user} allowedRoles={["student"]} />}>
+                        <Route path="/rutina" element={<Routine profesorElegidoId={profesorElegidoId} />} />
+                        <Route path="/postular/profesor" element={<PostularProfesor user={user} />} />
+                      </Route>
+
+                      <Route element={<ProtectedRoute user={user} allowedRoles={["coach"]} />}>
+                        <Route path="/panel/profesor" element={<Professor user={user} />} />
+                        <Route path="/create/routine" element={<CreateRoutine />} />
+                      </Route>
+
+                      <Route element={<ProtectedRoute user={user} allowedRoles={["admin"]} />}>
+                        <Route path="/students/directory" element={<StudentsDirectory />} />
+                        <Route path="/admin" element={<Admin />} />
+                        <Route path="/create/exercise" element={<ExerciseCreator />} />
+                      </Route>
+
                       <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                   </div>
@@ -238,8 +320,9 @@ export default function App() {
               </div>
             }
           />
-        )}
+        </Route>
       </Routes>
     </BrowserRouter>
+    
   );
 }
