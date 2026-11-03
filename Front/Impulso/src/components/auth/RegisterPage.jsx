@@ -7,11 +7,11 @@ function RegisterForm({ onRegister }) {
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    // 1. Extraer automáticamente todos los valores de los inputs del formulario
+    // Extraer automáticamente todos los valores de los inputs del formulario
     const formData = new FormData(event.target);
     const formValues = Object.fromEntries(formData.entries());
 
-    // 2. Mapear y adaptar los datos para el Backend
+    // Mapear y adaptar los datos para el Backend
     const payload = {
       name: formValues.name,
       lastname: formValues.surname,
@@ -24,7 +24,7 @@ function RegisterForm({ onRegister }) {
 
     console.log("📤 Enviando datos desde RegisterForm:", payload);
 
-    // 3. Enviar el objeto compilado a la función handleRegister
+    // Enviar el objeto compilado a la función handleRegister
     onRegister(payload);
   };
 

@@ -4,8 +4,8 @@ export class CoachModel {
   // Crear un nuevo perfil de profesor (se ejecuta al aprobar la solicitud)
   static async create({ user_id, name, specialty, experience, price, description, image, position }) {
     const [result] = await pool.query(
-      `INSERT INTO coaches (user_id, name, specialty, experience, price, description, image, position, rating, reviews, available)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, TRUE)`,
+      `INSERT INTO coaches (user_id, specialty, experience, price, description, image, position, available)
+       VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)`,
       [user_id, name, specialty, experience, price, description, image || null, position || null]
     );
     return { id: result.insertId, user_id, name, specialty, price };

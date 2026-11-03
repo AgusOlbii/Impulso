@@ -6,7 +6,7 @@ import { StudentModel } from "../models/student.model.js";
 import { boolean } from "zod";
 
 export const loginUser = async (email, password) => {
-  // 1. Buscar usuario usando el modelo (ya filtra por is_active = TRUE)
+  // Buscar usuario usando el modelo (ya filtra por is_active = TRUE)
   const user = await UserModel.findByEmail(email);
 
   // 2. Comprobar existencia y contraseña
