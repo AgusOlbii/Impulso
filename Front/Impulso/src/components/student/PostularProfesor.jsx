@@ -1,16 +1,34 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "../common/Header";
 import Icon from "../common/Icon";
 import { coachService } from "../../services/coach.service"; 
+import { applicationService } from "../../services/application.service"; 
 
 function PostularProfesor({ user }) {
   const [especialidad, setEspecialidad] = useState("");
   const [experiencia, setExperiencia] = useState("");
   const [descripcion, setDescripcion] = useState("");
-  const [enviado, setEnviado] = useState(false);
+  
+  const [application, setApplication] = useState(null);
+  const [checkingStatus, setCheckingStatus] = useState(true);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    const fetchMyApplication = async () => {
+      try {
+        const data = await applicationService.getMyApplication();
+        setApplication(data); 
+      } catch (err) {
+        console.error("Error al verificar la postulación:", err);
+      } finally {
+        setCheckingStatus(false);
+      }
+    };
+
+    fetchMyApplication();
+  }, []);
 
   const enviarFormulario = async (e) => {
     e.preventDefault();
@@ -31,8 +49,9 @@ function PostularProfesor({ user }) {
       };
 
       await coachService.sendApplication(payload);
+      const updatedApp = await applicationService.getMyApplication();
+      setApplication(updatedApp || { status: "pending" });
 
-      setEnviado(true);
     } catch (err) {
       setError(err.message || "Hubo un error al enviar la solicitud al servidor.");
     } finally {
@@ -40,6 +59,17 @@ function PostularProfesor({ user }) {
     }
   };
 
+  if (checkingStatus) {
+    return (
+      <>
+        <Header eyebrow="COMUNIDAD" title="Quiero ser profesor" />
+        <section className="apply-card">
+          <p>Verificando estado de la postulación...</p>
+        </section>
+      </>
+    );
+  }
+console.log(application.status)
   return (
     <>
       <Header eyebrow="COMUNIDAD" title="Quiero ser profesor" />
@@ -56,14 +86,30 @@ function PostularProfesor({ user }) {
       </section>
 
       <section className="apply-card">
-        {enviado ? (
-          <div className="success-message">
-            <Icon name="check" size={18} />
-            <span>
-              ¡Solicitud enviada con éxito! Revisamos tu perfil y te avisaremos cuando sea aprobada.
-            </span>
+        {/* Si ya existe una solicitud previa (pendiente o aprobada), mostramos su estado */}
+        {application && (application.status === "pending" || application.status === "approved")  ? (
+          <div className="success-message" style={{ flexDirection: "column", alignItems: "flex-start", gap: "8px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <Icon name="check" size={18} />
+              <span>
+                {application.status === "pending" && "¡Solicitud enviada con éxito! Tu postulación se encuentra pendiente de revisión por un administrador."}
+                {application.status === "approved" && "¡Felicitaciones! Tu solicitud fue aprobada y ya formas parte del staff de profesores."}
+              </span>
+            </div>
           </div>
         ) : (
+          <>
+            {}
+            {application && application.status === "rejected" && (
+              <div className="success-message" style={{ backgroundColor: "#fee2e2", color: "#991b1b", marginBottom: "20px", flexDirection: "column", alignItems: "flex-start", gap: "8px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Icon name="alert" size={18} />
+                  <span>
+                    Tu solicitud anterior fue rechazada. Podés corregir los datos y volver a enviarla.
+                  </span>
+                </div>
+              </div>
+            )}
           <form className="apply-form" onSubmit={enviarFormulario}>
             <p className="apply-account">
               Postulándote como <strong>{user?.name}</strong> · {user?.email}
@@ -113,7 +159,9 @@ function PostularProfesor({ user }) {
               <Icon name="arrow" size={16} />
             </button>
           </form>
+          </>
         )}
+        
       </section>
     </>
   );

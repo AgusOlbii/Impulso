@@ -16,7 +16,7 @@ function Admin() {
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState("");
 
-  // Cargar solicitudes pendientes al montar el componente
+  // Cargar solicitudes pendientes y datos al montar el componente
   useEffect(() => {
     const fetchApplications = async () => {
       try {
@@ -39,13 +39,10 @@ function Admin() {
       const applicant = applicants.find((item) => item.id === id);
       if (!applicant) return;
 
-      // Llamada real al endpoint del backend que creamos
       await adminService.approveCoachApplication(id);
 
-      // Actualizamos el estado local
       setApplicants(applicants.filter((item) => item.id !== id));
       
-      // Agregamos opcionalmente a la lista visual de profesores activos
       setProfessors([
         ...professors, 
         { 
@@ -67,16 +64,17 @@ function Admin() {
   };
 
   const rejectApplicant = async (id) => {
-    try {
-      // Si en el futuro creas un endpoint DELETE o PATCH para rechazar en backend, lo llamarías aquí.
-      // Por ahora lo filtramos de forma local:
-      const applicant = applicants.find((item) => item.id === id);
-      setApplicants(applicants.filter((item) => item.id !== id));
-      if (applicant) setNotice(`La solicitud fue rechazada.`);
-    } catch (error) {
-      console.error("Error al rechazar:", error);
-    }
-  };
+  try {
+    await adminService.rejectCoachApplication(id);
+
+    setApplicants(applicants.filter((item) => item.id !== id));
+    setNotice("La solicitud fue rechazada.");
+    
+  } catch (error) {
+    console.error("Error al rechazar la solicitud:", error);
+    setNotice(error.message || "Error al rechazar la solicitud.");
+  }
+};
 
   const removeProfessor = (id) => {
     const professor = professors.find((item) => item.id === id);

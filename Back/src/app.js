@@ -8,6 +8,15 @@ import userRoutes from "./routes/user.routes.js";
 import studentRoutes from "./routes/student.routes.js";
 import coachApplicationRoutes from './routes/coachApplication.routes.js';
 import adminRoutes from './routes/admin.routes.js';
+import coachRoutes from "./routes/coach.routes.js"
+import exerciseRoutes from "./routes/exercise.routes.js"
+import routineRoutes from "./routes/routine.routes.js"
+import routineExerciseRoutes from "./routes/routineExercise.routes.js";
+import notificationRoutes from "./routes/notification.routes.js";
+import paymentRoutes from "./routes/payment.routes.js";
+import reviewRoutes from "./routes/review.routes.js";
+
+
 
 dotenv.config();
 
@@ -57,7 +66,27 @@ app.use("/api/auth", authRoutes);
 
 //Rutas de student
 app.use("/api/students", studentRoutes)
+//Rut de coach
+app.use("/api/coach", coachRoutes)
 // Ruta aplicaciones a coach
 app.use('/api/coach-applications', coachApplicationRoutes);
 //rutas admin
 app.use('/api/admin', adminRoutes);
+
+//Ruta de exercise
+app.use('/api/exercise', exerciseRoutes)
+
+//Ruta de routine
+app.use('/api/routines', routineRoutes)
+
+//Ruta de routine_exercise
+app.use("/api/routine-exercises", routineExerciseRoutes);
+
+//Ruta de notificaciones
+app.use("/api/notifications", notificationRoutes);
+
+// Ruta de pagos
+app.use("/api/payments", paymentRoutes);
+
+// Ruta de reviews
+app.use("/api/reviews", reviewRoutes);
