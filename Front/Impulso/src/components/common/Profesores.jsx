@@ -15,7 +15,7 @@ const specialties = [
 ];
 
 const contentByRol = {
-  profesor: {
+  coach: {
     eyebrow: "RED DE PROFESIONALES",
     title: "Comunidad de Profesores",
     heroTitle: "Conectá con colegas de Impulso.",
@@ -23,7 +23,7 @@ const contentByRol = {
       "Explorá el equipo de profesionales, especialidades y referencias del staff.",
     showHireButton: false,
   },
-  alumno: {
+  student: {
     eyebrow: "ENTRENAMIENTO PERSONAL",
     title: "Encontrá tu profesor",
     heroTitle: "Un plan pensado para vos.",
@@ -44,7 +44,7 @@ function Profesores({ user, profesorElegidoId, onElegir, onDejar }) {
   const [filter, setFilter] = useState("Todos");
   const [notice, setNotice] = useState("");
   const [cambioPendiente, setCambioPendiente] = useState(null);
-  const copy = contentByRol[user?.rol] || contentByRol.alumno;
+  const copy = contentByRol[user?.rol] || contentByRol.coach;
   const socio = { id: user?.id, profesorId: profesorElegidoId };
   const profesorActual = professors.find((item) => item.id === profesorElegidoId);
   const visibleCoaches =

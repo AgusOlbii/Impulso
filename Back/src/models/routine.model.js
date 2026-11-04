@@ -1,81 +1,146 @@
 import pool from "../config/db.js";
 
 export class RoutineModel {
-  // Crear una nueva rutina asignada a un alumno por un profesor
-  static async create({ coach_id, student_id, title, description, start_date, end_date }) {
-    const [result] = await pool.query(
-      `INSERT INTO routines (coach_id, student_id, title, description, start_date, end_date)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [coach_id, student_id, title, description || null, start_date, end_date]
-    );
-    return { id: result.insertId, coach_id, student_id, title, start_date, end_date };
-  }
+    // 1. Crear una rutina completa con sus ejercicios usando una transacción SQL
+    static async create({ coach_id, student_id, title, description, start_date, end_date, exercises }) {
+        const connection = await pool.getConnection();
 
-  // Buscar rutina por ID con detalles del profesor y alumno
-  static async findById(id) {
-    const [rows] = await pool.query(
-      `SELECT r.*, 
-              c.name AS coach_name, c.specialty AS coach_specialty,
-              s.id AS student_id_profile, u.name AS student_name, u.lastname AS student_lastname
-       FROM routines r
-       JOIN coaches c ON r.coach_id = c.id
-       JOIN students s ON r.student_id = s.id
-       JOIN users u ON s.user_id = u.id
-       WHERE r.id = ?`,
-      [id]
-    );
-    return rows[0];
-  }
+        try {
+            await connection.beginTransaction();
 
-  // Obtener todas las rutinas asignadas a un alumno específico
-  static async findByStudentId(student_id) {
-    const [rows] = await pool.query(
-      `SELECT r.*, c.name AS coach_name, c.image AS coach_image
-       FROM routines r
-       JOIN coaches c ON r.coach_id = c.id
-       WHERE r.student_id = ?
-       ORDER BY r.start_date DESC`,
-      [student_id]
-    );
-    return rows;
-  }
+            // Insertar la cabecera de la rutina
+            const [routineResult] = await connection.query(
+                `INSERT INTO routines (coach_id, student_id, title, description, start_date, end_date)
+                 VALUES (?, ?, ?, ?, ?, ?)`,
+                [coach_id, student_id, title, description || null, start_date, end_date]
+            );
 
-  // Obtener todas las rutinas creadas por un profesor específico
-  static async findByCoachId(coach_id) {
-    const [rows] = await pool.query(
-      `SELECT r.*, u.name AS student_name, u.lastname AS student_lastname
-       FROM routines r
-       JOIN students s ON r.student_id = s.id
-       JOIN users u ON s.user_id = u.id
-       WHERE r.coach_id = ?
-       ORDER BY r.created_at DESC`,
-      [coach_id]
-    );
-    return rows;
-  }
+            const routineId = routineResult.insertId;
 
-  // Actualizar datos generales de la rutina
-  static async update(id, fields) {
-    const keys = Object.keys(fields);
-    if (keys.length === 0) return null;
+            // Preparar e insertar los ejercicios asignados en routine_exercises
+            const exerciseValues = exercises.map((item) => [
+                routineId,
+                item.exercise_id,
+                item.day_of_week,
+                item.target_sets,
+                item.target_reps,
+                item.target_weight || 0.00
+            ]);
 
-    const setClause = keys.map((key) => `${key} = ?`).join(", ");
-    const values = Object.values(fields);
+            await connection.query(
+                `INSERT INTO routine_exercises 
+                    (routine_id, exercise_id, day_of_week, target_sets, target_reps, target_weight)
+                 VALUES ?`,
+                [exerciseValues]
+            );
 
-    const [result] = await pool.query(
-      `UPDATE routines SET ${setClause} WHERE id = ?`,
-      [...values, id]
-    );
+            await connection.commit();
+            return routineId;
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
+    }
 
-    return result.affectedRows > 0;
-  }
+    // Traer una rutina completa por su ID (incluyendo la lista de ejercicios formateada)
+    static async findById(id) {
+        const [rows] = await pool.query(
+            `SELECT 
+                r.id AS routine_id,
+                r.coach_id,
+                r.student_id,
+                r.title,
+                r.description,
+                r.start_date,
+                r.end_date,
+                r.created_at,
+                re.id AS routine_exercise_id,
+                re.day_of_week,
+                re.target_sets,
+                re.target_reps,
+                re.target_weight,
+                re.actual_sets,
+                re.actual_reps,
+                re.actual_weight,
+                re.completed,
+                e.id AS exercise_id,
+                e.name AS exercise_name,
+                e.muscle_group,
+                e.video_url
+            FROM routines r
+            LEFT JOIN routine_exercises re ON r.id = re.routine_id
+            LEFT JOIN exercises e ON re.exercise_id = e.id
+            WHERE r.id = ?
+            ORDER BY FIELD(re.day_of_week, 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo')`,
+            [id]
+        );
 
-  // Eliminar una rutina
-  static async delete(id) {
-    const [result] = await pool.query(
-      `DELETE FROM routines WHERE id = ?`,
-      [id]
-    );
-    return result.affectedRows > 0;
-  }
+        if (rows.length === 0) return null;
+
+        // Estructuramos la respuesta para agrupar los ejercicios dentro del objeto de la rutina
+        const routine = {
+            id: rows[0].routine_id,
+            coach_id: rows[0].coach_id,
+            student_id: rows[0].student_id,
+            title: rows[0].title,
+            description: rows[0].description,
+            start_date: rows[0].start_date,
+            end_date: rows[0].end_date,
+            created_at: rows[0].created_at,
+            exercises: rows[0].routine_exercise_id ? rows.map(row => ({
+                routine_exercise_id: row.routine_exercise_id,
+                exercise_id: row.exercise_id,
+                name: row.exercise_name,
+                muscle_group: row.muscle_group,
+                video_url: row.video_url,
+                day_of_week: row.day_of_week,
+                target_sets: row.target_sets,
+                target_reps: row.target_reps,
+                target_weight: row.target_weight,
+                actual_sets: row.actual_sets,
+                actual_reps: row.actual_reps,
+                actual_weight: row.actual_weight,
+                completed: row.completed
+            })) : []
+        };
+
+        return routine;
+    }
+
+    // 3. Obtener todas las rutinas asignadas a un estudiante específico
+    static async findByStudentId(studentId) {
+        const [rows] = await pool.query(
+            `SELECT r.*, COUNT(re.id) AS total_exercises
+             FROM routines r
+             LEFT JOIN routine_exercises re ON r.id = re.routine_id
+             WHERE r.student_id = ?
+             GROUP BY r.id
+             ORDER BY r.start_date DESC`,
+            [studentId]
+        );
+        return rows;
+    }
+
+    // 4. Registrar el progreso del alumno (actualizar valores reales)
+    static async updateProgress(routineExerciseId, { actual_sets, actual_reps, actual_weight, completed }) {
+        const [result] = await pool.query(
+            `UPDATE routine_exercises
+             SET 
+                actual_sets = COALESCE(?, actual_sets),
+                actual_reps = COALESCE(?, actual_reps),
+                actual_weight = COALESCE(?, actual_weight),
+                completed = COALESCE(?, completed)
+             WHERE id = ?`,
+            [actual_sets, actual_reps, actual_weight, completed, routineExerciseId]
+        );
+        return result.affectedRows > 0;
+    }
+
+    // 5. Eliminar una rutina (ON DELETE CASCADE limpia automaticamente routine_exercises)
+    static async delete(id) {
+        const [result] = await pool.query(`DELETE FROM routines WHERE id = ?`, [id]);
+        return result.affectedRows > 0;
+    }
 }

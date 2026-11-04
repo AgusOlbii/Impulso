@@ -39,7 +39,9 @@ export class CoachApplicationModel {
   static async findByUserId(user_id) {
     const [rows] = await pool.query(
       `SELECT * FROM coach_applications 
-       WHERE user_id = ? AND status = 'pending'`,
+       WHERE user_id = ?
+       ORDER BY created_at DESC 
+       LIMIT 1`,
       [user_id]
     );
     return rows[0];

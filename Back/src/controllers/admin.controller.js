@@ -1,7 +1,5 @@
 import { CoachApplicationModel } from "../models/coachApplication.model.js";
 import pool from "../config/db.js";
-import { CoachModel } from "../models/coach.model.js";
-import { UserModel } from "../models/user.model.js";
 
 export const adminController = {
   async getPendingApplications(req, res) {
@@ -54,5 +52,36 @@ export const adminController = {
     console.error("🔥 Error al aprobar la solicitud:", error);
     return res.status(500).json({ error: error.message });
   }
-}
+},
+
+async rejectApplication(req, res) {
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+
+      const { id } = req.params;
+
+      // 1. Verificar si la solicitud existe y está pendiente
+      const [apps] = await connection.query("SELECT * FROM coach_applications WHERE id = ?", [id]);
+      const application = apps[0];
+
+      if (!application || application.status !== 'pending') {
+        connection.release();
+        return res.status(404).json({ message: "Solicitud no encontrada o ya procesada" });
+      }
+
+      // 2. Actualizar el estado de la solicitud a 'rejected'
+      await connection.query("UPDATE coach_applications SET status = 'rejected' WHERE id = ?", [id]);
+
+      await connection.commit();
+      connection.release();
+
+      return res.json({ message: "Solicitud rechazada con éxito." });
+    } catch (error) {
+      await connection.rollback();
+      connection.release();
+      console.error("🔥 Error al rechazar la solicitud:", error);
+      return res.status(500).json({ error: error.message });
+    }
+  }
 };

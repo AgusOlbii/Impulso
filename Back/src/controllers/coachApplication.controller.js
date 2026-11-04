@@ -16,5 +16,20 @@ export const coachApplicationController = {
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
+  },
+
+  async getMyApplicationStatus(req, res) {
+    try {
+      const userId = req.user.id; 
+      console.log("🔎 Buscando solicitud para el user_id:", userId);
+      
+      const application = await CoachApplicationModel.findByUserId(userId);
+      console.log("📦 Solicitud encontrada en BD:", application);
+
+      return res.json(application);
+    } catch (error) {
+      console.error("🔥 Error al obtener la postulación:", error);
+      return res.status(500).json({ error: error.message });
+    }
   }
 };

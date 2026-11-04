@@ -1,7 +1,7 @@
 import pool from "../config/db.js";
 
 export class ExerciseModel {
-  // Crear un nuevo ejercicio (Admin)
+  // Crear un nuevo ejercicio 
   static async create({ name, description, muscle_group, video_url }) {
     const [result] = await pool.query(
       `INSERT INTO exercises (name, description, muscle_group, video_url)

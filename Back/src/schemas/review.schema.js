@@ -2,7 +2,6 @@ import { z } from "zod";
 
 export const createReviewSchema = z.object({
   coach_id: z.number().int().positive("ID de profesor inválido"),
-  student_id: z.number().int().positive("ID de alumno inválido"),
   rating: z
     .number()
     .int("El puntaje debe ser un entero")

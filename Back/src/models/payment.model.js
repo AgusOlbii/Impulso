@@ -1,7 +1,7 @@
 import pool from "../config/db.js";
 
 export class PaymentModel {
-  // 1. Registrar una nueva contratación / pago en garantía (Escrow)
+  // Registrar una nueva contratación / pago en garantía (Escrow)
   static async create({ student_id, coach_id, amount, platform_fee_percentage = 10 }) {
     const platform_fee = (amount * platform_fee_percentage) / 100;
     const coach_earnings = amount - platform_fee;
@@ -25,7 +25,7 @@ export class PaymentModel {
     };
   }
 
-  // 2. Aceptar/Completar pago (Cuando el profesor acepta la solicitud dentro de las 24hs)
+  // Aceptar/Completar pago (Cuando el profesor acepta la solicitud dentro de las 24hs)
   static async completePayment(payment_id) {
     const [result] = await pool.query(
       `UPDATE payments 
@@ -36,7 +36,7 @@ export class PaymentModel {
     return result.affectedRows > 0;
   }
 
-  // 3. Reembolsar pago (Si el profesor rechaza o expiran las 24hs)
+  // Reembolsar pago (Si el profesor rechaza o expiran las 24hs)
   static async refundPayment(payment_id) {
     const [result] = await pool.query(
       `UPDATE payments 
@@ -47,7 +47,7 @@ export class PaymentModel {
     return result.affectedRows > 0;
   }
 
-  // 4. Proceso automático / Cron: Liberar y reembolsar automáticamente los pagos expirados (>24hs)
+  // Proceso automático / Cron: Liberar y reembolsar automáticamente los pagos expirados (>24hs)
   static async processExpiredEscrows() {
     const [rows] = await pool.query(
       `SELECT * FROM payments 
@@ -67,7 +67,7 @@ export class PaymentModel {
     return rows; // Retorna los pagos reembolsados para notificar a los alumnos
   }
 
-  // 5. Métrica para Profesor: Ganancias desglosadas por Año, Mes y Semana
+  // Métrica para Profesor: Ganancias desglosadas por Año, Mes y Semana
   static async getCoachEarningsMetrics(coach_id) {
     // Total histórico completado
     const [total] = await pool.query(
@@ -103,7 +103,7 @@ export class PaymentModel {
     };
   }
 
-  // 6. Métrica para Admin: Resumen global financiero y conteos de la plataforma
+  // Métrica para Admin: Resumen global financiero y conteos de la plataforma
   static async getAdminFinancialOverview() {
     const [grossVolume] = await pool.query(
       `SELECT COALESCE(SUM(amount), 0) AS total_gross
@@ -139,5 +139,20 @@ export class PaymentModel {
       },
       users_overview: userMetrics[0],
     };
+  }
+
+
+// Obtener la lista de solicitudes pendientes (escrow) para un profesor específico
+ static async getPendingRequestsByCoach(coach_id) {
+    const [rows] = await pool.query(
+      `SELECT p.id AS payment_id, p.amount, p.created_at, p.expires_at, p.status,
+              u.id AS student_id, u.name AS student_name, u.email AS student_email
+       FROM payments p
+       JOIN users u ON p.student_id = u.id
+       WHERE p.coach_id = ? AND p.status = 'escrow'
+       ORDER BY p.created_at DESC`,
+      [coach_id]
+    );
+    return rows;
   }
 }
