@@ -1,4 +1,25 @@
 import { UserModel } from "../models/user.model.js";
+import { CoachModel } from "../models/coach.model.js";
+
+export const uploadMyPhoto = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ ok: false, message: "Elegí una foto para subir" });
+    }
+    const imageUrl = `/uploads/${req.file.filename}`;
+    await UserModel.update(req.user.id, { image_url: imageUrl });
+    if (req.user.rol === "coach") {
+      const coach = await CoachModel.findByUserId(req.user.id);
+      if (coach) {
+        await CoachModel.update(coach.id, { image: imageUrl });
+      }
+    }
+    const user = await UserModel.findByIdWithRoleData(req.user.id);
+    return res.json({ ok: true, image_url: imageUrl, user });
+  } catch (error) {
+    return res.status(500).json({ ok: false, message: error.message });
+  }
+};
 
 //Obtener usuario por ID
 export const getUserById = async (req, res) => {

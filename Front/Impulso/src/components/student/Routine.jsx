@@ -1,19 +1,76 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../common/Header";
 import Icon from "../common/Icon";
-import professors from "../../data/professors";
-import rutinasPorProfesor from "../../data/rutinasPorProfesor";
+import { coachService } from "../../services/coach.service";
+import { routineService } from "../../services/routine.service";
+import { reviewService } from "../../services/review.service";
+import { mediaUrl } from "../../utils/media";
+import RatingStars from "../common/RatingStars";
 
 function Routine({ profesorElegidoId }) {
   const navigate = useNavigate();
   const [diaActivo, setDiaActivo] = useState();
   const [completed, setCompleted] = useState([]);
+  const [profesor, setProfesor] = useState(null);
+  const [rutinaSemanal, setRutinaSemanal] = useState(null);
+  const [cargando, setCargando] = useState(true);
+  const [nota, setNota] = useState("");
+  const [rating, setRating] = useState(0);
+  const [ratingNotice, setRatingNotice] = useState("");
 
-  const profesor = professors.find((item) => item.id === profesorElegidoId);
-  const rutinaSemanal = profesor
-    ? rutinasPorProfesor[profesor.id]
-    : null;
+  useEffect(() => {
+    let cancel = false;
+    async function load() {
+      try {
+        const [coachesData, routineData] = await Promise.all([
+          coachService.list(),
+          routineService.mine(),
+        ]);
+        if (cancel) return;
+        const found = (coachesData.coaches || []).find(
+          (item) => item.id === profesorElegidoId
+        );
+        setProfesor(found || (profesorElegidoId ? { name: "Tu profesor", specialty: "" } : null));
+        const days = routineData.days?.length ? routineData.days : [];
+        setRutinaSemanal(days);
+        setCompleted(
+          days.flatMap((item) =>
+            item.ejercicios.filter((ejercicio) => ejercicio.completed).map((ejercicio) => ejercicio.id)
+          )
+        );
+        setNota(routineData.routine?.description || "");
+        if (profesorElegidoId) {
+          try {
+            const reviewData = await reviewService.mine();
+            if (!cancel) setRating(reviewData.review?.rating || 0);
+          } catch {
+            if (!cancel) setRating(0);
+          }
+        }
+        if (routineData.routine) {
+          setProfesor((actual) => ({
+            ...(actual || {}),
+            name: routineData.routine.coach_name || actual?.name,
+            specialty: routineData.routine.coach_specialty || actual?.specialty,
+            image: routineData.routine.coach_image || actual?.image,
+          }));
+        }
+      } catch {
+        if (!cancel) {
+          setProfesor(profesorElegidoId ? { name: "Tu profesor", specialty: "" } : null);
+          setRutinaSemanal([]);
+          setNota("");
+        }
+      } finally {
+        if (!cancel) setCargando(false);
+      }
+    }
+    load();
+    return () => {
+      cancel = true;
+    };
+  }, [profesorElegidoId]);
   const dia =
     diaActivo === null
       ? null
@@ -27,17 +84,82 @@ function Routine({ profesorElegidoId }) {
     : 0;
   const progreso = totalDia ? (hechosDia / totalDia) * 100 : 0;
 
+  const saveRating = async (score) => {
+    setRating(score);
+    try {
+      await reviewService.save({ rating: score });
+      setRatingNotice("Valoración enviada. Tu profesor la va a ver en su perfil.");
+    } catch (err) {
+      setRatingNotice(err.message || "No se pudo guardar la valoración.");
+    }
+  };
+
   const toggleDia = (id) => {
     setDiaActivo((actual) => (actual === id ? null : id));
   };
 
-  const toggleEjercicio = (id) => {
-    setCompleted((lista) =>
-      lista.includes(id) ? lista.filter((item) => item !== id) : [...lista, id]
+  const currentValue = (exercise, field) => {
+    if (field === "sets") return exercise.actual_sets ?? exercise.sets;
+    if (field === "reps") return exercise.actual_reps ?? exercise.reps;
+    return exercise.actual_weight ?? exercise.target_weight ?? 0;
+  };
+
+  const patchExercise = (id, fields) => {
+    setRutinaSemanal((days) =>
+      (days || []).map((item) => ({
+        ...item,
+        ejercicios: item.ejercicios.map((ejercicio) =>
+          ejercicio.id === id ? { ...ejercicio, ...fields } : ejercicio
+        ),
+      }))
     );
   };
 
-  if (!profesor || !rutinaSemanal) {
+  const toggleEjercicio = async (id) => {
+    const done = !completed.includes(id);
+    setCompleted((lista) =>
+      done ? [...lista, id] : lista.filter((item) => item !== id)
+    );
+    try {
+      await routineService.logProgress(id, { completed: done });
+    } catch {
+      setCompleted((lista) =>
+        done ? lista.filter((item) => item !== id) : [...lista, id]
+      );
+    }
+  };
+
+  const adjustExercise = async (exercise, field, amount) => {
+    const min = field === "weight" ? 0 : 1;
+    const max = field === "sets" ? 10 : field === "weight" ? 200 : 30;
+    const next = Math.max(min, Math.min(max, currentValue(exercise, field) + amount));
+    const payload = {
+      actual_sets: field === "sets" ? next : currentValue(exercise, "sets"),
+      actual_reps: field === "reps" ? next : currentValue(exercise, "reps"),
+      actual_weight: field === "weight" ? next : currentValue(exercise, "weight"),
+    };
+    const adjusted =
+      payload.actual_sets !== Number(exercise.sets) ||
+      payload.actual_reps !== Number(exercise.reps) ||
+      payload.actual_weight !== Number(exercise.target_weight);
+    patchExercise(exercise.id, { ...payload, adjusted });
+    try {
+      await routineService.logProgress(exercise.id, payload);
+    } catch {
+      patchExercise(exercise.id, {
+        actual_sets: exercise.actual_sets,
+        actual_reps: exercise.actual_reps,
+        actual_weight: exercise.actual_weight,
+        adjusted: exercise.adjusted,
+      });
+    }
+  };
+
+  if (cargando) {
+    return <Header eyebrow="PLAN PERSONALIZADO" title="Mi rutina" />;
+  }
+
+  if (!profesorElegidoId) {
     return (
       <>
         <Header eyebrow="PLAN PERSONALIZADO" title="Mi rutina" />
@@ -54,6 +176,24 @@ function Routine({ profesorElegidoId }) {
             Ver profesores
             <Icon name="arrow" size={16} />
           </button>
+        </section>
+      </>
+    );
+  }
+
+  if (!rutinaSemanal?.length) {
+    return (
+      <>
+        <Header eyebrow="PLAN PERSONALIZADO" title="Mi rutina" />
+        <section className="creator-heading">
+          <div>
+            <span className="tag bright">SIN RUTINA</span>
+            <h2>Tu profesor todavía no cargó la semana.</h2>
+            <p>
+              Ya estás con {profesor?.name || "tu entrenador"}. Cuando arme el
+              plan, los ejercicios aparecen acá.
+            </p>
+          </div>
         </section>
       </>
     );
@@ -113,27 +253,63 @@ function Routine({ profesorElegidoId }) {
             <div className="exercise-list">
               {dia.ejercicios.map((exercise) => {
                 const done = completed.includes(exercise.id);
+                const sets = currentValue(exercise, "sets");
+                const reps = currentValue(exercise, "reps");
+                const weight = currentValue(exercise, "weight");
                 return (
-                  <button
-                    className={`exercise ${done ? "done" : ""}`}
+                  <article
+                    className={`exercise ${done ? "done" : ""} ${exercise.adjusted ? "adjusted" : ""}`}
                     key={exercise.id}
-                    type="button"
-                    onClick={() => toggleEjercicio(exercise.id)}
                   >
-                    <span className="exercise-number">
+                    <button
+                      type="button"
+                      className="exercise-number"
+                      onClick={() => toggleEjercicio(exercise.id)}
+                      aria-label={done ? `Desmarcar ${exercise.name}` : `Completar ${exercise.name}`}
+                    >
                       {done ? <Icon name="check" size={18} /> : exercise.number}
-                    </span>
+                    </button>
                     <span className="exercise-name">
                       <strong>{exercise.name}</strong>
-                      <small>{exercise.detail}</small>
+                      <small>
+                        {sets} x {reps}
+                        {exercise.adjusted
+                          ? ` · asignado ${exercise.target_weight} kg`
+                          : ""}
+                      </small>
                     </span>
                     <span className="muscle">{exercise.muscle}</span>
                     <span className="weight">
-                      <strong>{exercise.weight}</strong>
-                      <small>PESO</small>
+                      <strong>{weight} kg</strong>
+                      <small>{exercise.adjusted ? "TU PESO" : "PESO"}</small>
                     </span>
-                    <Icon name="arrow" size={18} />
-                  </button>
+                    <div className="exercise-adjust">
+                      <div>
+                        <label>SERIES</label>
+                        <span className="stepper">
+                          <button type="button" onClick={() => adjustExercise(exercise, "sets", -1)}>−</button>
+                          <strong>{sets}</strong>
+                          <button type="button" onClick={() => adjustExercise(exercise, "sets", 1)}>+</button>
+                        </span>
+                      </div>
+                      <div>
+                        <label>REPS</label>
+                        <span className="stepper">
+                          <button type="button" onClick={() => adjustExercise(exercise, "reps", -1)}>−</button>
+                          <strong>{reps}</strong>
+                          <button type="button" onClick={() => adjustExercise(exercise, "reps", 1)}>+</button>
+                        </span>
+                      </div>
+                      <div>
+                        <label>PESO</label>
+                        <span className="stepper">
+                          <button type="button" onClick={() => adjustExercise(exercise, "weight", -1)}>−</button>
+                          <strong>{weight}</strong>
+                          <button type="button" onClick={() => adjustExercise(exercise, "weight", 1)}>+</button>
+                        </span>
+                      </div>
+                    </div>
+                  </article>
                 );
               })}
             </div>
@@ -142,17 +318,23 @@ function Routine({ profesorElegidoId }) {
         <aside className="coach-note">
           <img
             className="avatar coach"
-            src={profesor.image || profesor.photo}
+            src={mediaUrl(profesor.image || profesor.photo)}
             alt={profesor.name}
             style={{ objectPosition: profesor.position || "center 20%" }}
           />
           <span className="eyebrow">NOTA DE TU ENTRENADOR</span>
           <p>
-            “Esta semana priorizá la calidad del movimiento. Si cierra fácil,
-            subí un poco la carga o el ritmo.”
+            {nota
+              ? `“${nota}”`
+              : "Tu profesor todavía no dejó una nota para esta rutina."}
           </p>
           <strong>{profesor.name}</strong>
           <small>{profesor.specialty}</small>
+          <div className="plan-rate">
+            <span>Valorá esta rutina</span>
+            <RatingStars value={rating} onChange={saveRating} />
+            {ratingNotice && <small>{ratingNotice}</small>}
+          </div>
         </aside>
       </div>
     </>

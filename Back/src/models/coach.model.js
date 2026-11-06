@@ -14,11 +14,17 @@ export class CoachModel {
   // Obtener la lista pública de profesores disponibles (Vitrina Frontend)
   static async findAllAvailable() {
     const [rows] = await pool.query(
-      `SELECT c.*, u.email, u.phone 
+      `SELECT c.*, u.name, u.lastname, u.email, u.phone, u.image_url,
+              stats.avg_rating, stats.review_count
        FROM coaches c
        JOIN users u ON c.user_id = u.id
+       LEFT JOIN (
+         SELECT coach_id, ROUND(AVG(rating), 1) AS avg_rating, COUNT(*) AS review_count
+         FROM reviews
+         GROUP BY coach_id
+       ) stats ON stats.coach_id = c.id
        WHERE c.available = TRUE AND u.is_active = TRUE
-       ORDER BY c.rating DESC, c.reviews DESC`
+       ORDER BY c.id DESC`
     );
     return rows;
   }

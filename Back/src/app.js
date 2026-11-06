@@ -2,10 +2,15 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 import pool from "./config/db.js";
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import studentRoutes from "./routes/student.routes.js";
+import coachRoutes from "./routes/coach.routes.js";
+import routineRoutes from "./routes/routine.routes.js";
+import reviewRoutes from "./routes/review.routes.js";
 import coachApplicationRoutes from './routes/coachApplication.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 
@@ -24,6 +29,7 @@ app.use(cors({
 
 app.use(express.json());
 app.use(cookieParser());
+app.use("/uploads", express.static(path.join(path.dirname(fileURLToPath(import.meta.url)), "../uploads")));
 
 app.get("/api/health", async (req, res) => {
   try {
@@ -55,8 +61,10 @@ app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 
 
-//Rutas de student
-app.use("/api/students", studentRoutes)
+app.use("/api/students", studentRoutes);
+app.use("/api/coaches", coachRoutes);
+app.use("/api/routines", routineRoutes);
+app.use("/api/reviews", reviewRoutes);
 // Ruta aplicaciones a coach
 app.use('/api/coach-applications', coachApplicationRoutes);
 //rutas admin

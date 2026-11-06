@@ -26,7 +26,7 @@ export class StudentModel {
   // Buscar perfil de alumno por user_id
   static async findByUserId(user_id) {
     const [rows] = await pool.query(
-      `SELECT s.*, u.name, u.lastname, u.email, u.dni, u.phone, u.bithday, u.image_url
+      `SELECT s.*, u.name, u.lastname, u.email, u.dni, u.phone, u.birthday, u.image_url
        FROM students s
        JOIN users u ON s.user_id = u.id
        WHERE s.user_id = ?`,
@@ -57,17 +57,17 @@ static async update(studentId, fields) {
   const userId = studentRows[0].user_id;
 
   const userFieldsKeys = ["name", "lastname", "email", "phone", "dni", "birthday", "image_url"];
-  
+  const studentFieldsKeys = ["weight", "height", "goal", "medical_notes"];
+
   const userUpdates = {};
   const studentUpdates = {};
 
   for (const [key, value] of Object.entries(fields)) {
-
     const cleanValue = (value === "" || value === undefined) ? null : value;
 
     if (userFieldsKeys.includes(key)) {
       userUpdates[key] = cleanValue;
-    } else {
+    } else if (studentFieldsKeys.includes(key)) {
       studentUpdates[key] = cleanValue;
     }
   }
@@ -91,8 +91,8 @@ static async update(studentId, fields) {
     const values = Object.values(studentUpdates);
 
     await pool.query(
-      `UPDATE students SET ${setClause} WHERE id = ?`,
-      [...values, studentId]
+      `UPDATE students SET ${setClause} WHERE user_id = ?`,
+      [...values, userId]
     );
   }
 

@@ -24,6 +24,15 @@ export function register(userData) {
   });
 }
 
+export function uploadPhoto(file) {
+  const body = new FormData();
+  body.append("photo", file);
+  return request("/users/me/photo", {
+    method: "POST",
+    body,
+  });
+}
+
 export const updateProfile = async (user, formData) => {
   // Mapeamos el endpoint según el rol del usuario
   const endpoints = {

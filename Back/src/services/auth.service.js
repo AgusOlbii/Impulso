@@ -21,15 +21,11 @@ export const loginUser = async (email, password) => {
     { expiresIn: "7d" }
   );
 
+  const profile = await UserModel.findByIdWithRoleData(user.id);
+
   return {
     token,
-    user: {
-      id: user.id,
-      name: user.name,
-      lastname: user.lastname,
-      email: user.email,
-      rol: user.rol,
-    },
+    user: profile,
   };
 };
 

@@ -31,7 +31,7 @@ export class ExerciseModel {
     // Buscar un ejercicio por su Nombre
   static async findByName(name) {
     const [rows] = await pool.query(
-      `SELECT * FROM exercises WHERE id = ?`,
+      `SELECT * FROM exercises WHERE name = ?`,
       [name]
     );
     return rows[0];

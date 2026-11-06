@@ -24,6 +24,7 @@ import {
   leerProfesorElegido,
   guardarProfesorElegido,
 } from "./data/eleccionProfesor";
+import { coachService } from "./services/coach.service";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -53,17 +54,26 @@ export default function App() {
       setProfesorElegidoId(null);
       return;
     }
+    if (user.coach_id) {
+      setProfesorElegidoId(user.coach_id);
+      guardarProfesorElegido(user.id, user.coach_id);
+      return;
+    }
     setProfesorElegidoId(leerProfesorElegido(user.id));
-  }, [user?.id]);
+  }, [user?.id, user?.coach_id]);
 
-  const elegirProfesor = (profesorId) => {
+  const elegirProfesor = async (profesorId) => {
+    await coachService.hire(profesorId);
     setProfesorElegidoId(profesorId);
     guardarProfesorElegido(user.id, profesorId);
+    setUser((actual) => ({ ...actual, coach_id: profesorId }));
   };
 
-  const dejarProfesor = () => {
+  const dejarProfesor = async () => {
+    await coachService.leave();
     setProfesorElegidoId(null);
     guardarProfesorElegido(user.id, null);
+    setUser((actual) => ({ ...actual, coach_id: null }));
   };
 
   async function handleLogin(credentials) {
@@ -115,7 +125,6 @@ export default function App() {
   if (checkingSession) {
     return <div className="app-loading">Verificando sesión...</div>;
   }
-  console.log(user)
   return (
     <BrowserRouter>
       <Routes>
@@ -146,7 +155,16 @@ export default function App() {
                 <main className="main-content">
                   <div className="content-container">
                     <Routes>
-                      <Route path="/" element={<Home user={user} />} />
+                      <Route
+                        path="/"
+                        element={
+                          user.rol === "coach" ? (
+                            <Navigate to="/panel/profesor" replace />
+                          ) : (
+                            <Home user={user} />
+                          )
+                        }
+                      />
                       <Route
                         path="/profesores"
                         element={

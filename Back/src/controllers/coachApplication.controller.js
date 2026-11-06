@@ -4,11 +4,16 @@ import { createCoachApplicationSchema } from "../schemas/coachApplication.schema
 export const coachApplicationController = {
   async create(req, res) {
     try {
-      const payload = { ...req.body, user_id: req.user.id };
+      const payload = { ...req.body, user_id: Number(req.user.id) };
 
       const validation = createCoachApplicationSchema.safeParse(payload);
       if (!validation.success) {
-        return res.status(400).json({ errors: validation.error.errors });
+        const issues = validation.error.issues || [];
+        return res.status(400).json({
+          ok: false,
+          message: issues[0]?.message || "Datos inválidos",
+          errors: issues,
+        });
       }
 
       const applicationId = await CoachApplicationModel.create(validation.data);

@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Header from "./Header";
 import Icon from "./Icon";
-import professors from "../../data/professors";
 import estadoEleccion from "../../config/reglasProfesor";
+import { coachService } from "../../services/coach.service";
+import { mediaUrl } from "../../utils/media";
 
 const specialties = [
   "Todos",
@@ -15,7 +16,7 @@ const specialties = [
 ];
 
 const contentByRol = {
-  profesor: {
+  coach: {
     eyebrow: "RED DE PROFESIONALES",
     title: "Comunidad de Profesores",
     heroTitle: "Conectá con colegas de Impulso.",
@@ -23,7 +24,7 @@ const contentByRol = {
       "Explorá el equipo de profesionales, especialidades y referencias del staff.",
     showHireButton: false,
   },
-  alumno: {
+  student: {
     eyebrow: "ENTRENAMIENTO PERSONAL",
     title: "Encontrá tu profesor",
     heroTitle: "Un plan pensado para vos.",
@@ -44,18 +45,41 @@ function Profesores({ user, profesorElegidoId, onElegir, onDejar }) {
   const [filter, setFilter] = useState("Todos");
   const [notice, setNotice] = useState("");
   const [cambioPendiente, setCambioPendiente] = useState(null);
-  const copy = contentByRol[user?.rol] || contentByRol.alumno;
+  const [professors, setProfessors] = useState([]);
+  const copy = contentByRol[user?.rol] || contentByRol.student;
   const socio = { id: user?.id, profesorId: profesorElegidoId };
   const profesorActual = professors.find((item) => item.id === profesorElegidoId);
   const visibleCoaches =
     filter === "Todos"
       ? professors
       : professors.filter((coach) => coach.specialty === filter);
+  const ratedCoaches = professors.filter((coach) => Number(coach.reviews) > 0);
+  const averageRating = ratedCoaches.length
+    ? (
+        ratedCoaches.reduce(
+          (total, coach) => total + Number(String(coach.rating).replace(",", ".")),
+          0
+        ) / ratedCoaches.length
+      )
+        .toFixed(1)
+        .replace(".", ",")
+    : "—";
 
-  const contratar = (coach) => {
-    onElegir(coach.id);
-    setCambioPendiente(null);
-    setNotice(`Contrataste a ${coach.name}. Tu rutina ya está en Mi rutina.`);
+  useEffect(() => {
+    coachService
+      .list()
+      .then((data) => setProfessors(data.coaches || []))
+      .catch(() => setNotice("No se pudieron cargar los profesores."));
+  }, []);
+
+  const contratar = async (coach) => {
+    try {
+      await onElegir(coach.id);
+      setCambioPendiente(null);
+      setNotice(`Contrataste a ${coach.name}. Tu rutina ya está en Mi rutina.`);
+    } catch (error) {
+      setNotice(error.message || "No se pudo contratar.");
+    }
   };
 
   return (
@@ -77,7 +101,7 @@ function Profesores({ user, profesorElegidoId, onElegir, onDejar }) {
             certificados
           </span>
           <i />
-          <strong>4,9</strong>
+          <strong>{averageRating}</strong>
           <span>
             valoración
             <br />
@@ -129,7 +153,7 @@ function Profesores({ user, profesorElegidoId, onElegir, onDejar }) {
             <article className="coach-card" key={coach.id}>
               <div className="coach-photo">
                 <img
-                  src={coach.image}
+                  src={mediaUrl(coach.image)}
                   alt={`${coach.name}, profesor de ${coach.specialty}`}
                   style={{ objectPosition: coach.position }}
                 />
@@ -166,8 +190,13 @@ function Profesores({ user, profesorElegidoId, onElegir, onDejar }) {
                       className={`hire-button ${estado === "ya_elegido" ? "hired" : ""}`}
                       onClick={() => {
                         if (estado === "ya_elegido") {
-                          onDejar();
-                          setNotice(`Dejaste de entrenar con ${coach.name}.`);
+                          onDejar()
+                            .then(() =>
+                              setNotice(`Dejaste de entrenar con ${coach.name}.`)
+                            )
+                            .catch((error) =>
+                              setNotice(error.message || "No se pudo dejar al profesor.")
+                            );
                           return;
                         }
                         setCambioPendiente(coach);

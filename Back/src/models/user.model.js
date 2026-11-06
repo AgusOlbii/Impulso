@@ -86,6 +86,26 @@ export class UserModel {
       [...values, userId]
     );
   }
+
+  const studentFieldsKeys = ["weight", "height", "goal", "medical_notes"];
+  const studentUpdates = {};
+  for (const key of studentFieldsKeys) {
+    if (Object.prototype.hasOwnProperty.call(specificUpdates, key)) {
+      studentUpdates[key] = specificUpdates[key];
+    }
+  }
+
+  if (rol === "student" && Object.keys(studentUpdates).length > 0) {
+    const keys = Object.keys(studentUpdates);
+    const setClause = keys.map((key) => `${key} = ?`).join(", ");
+    const values = Object.values(studentUpdates);
+
+    await pool.query(
+      `UPDATE students SET ${setClause} WHERE user_id = ?`,
+      [...values, userId]
+    );
+  }
+
   return true;
 }
 // Actualizar rol del usuario
@@ -119,7 +139,7 @@ static async updateRole(userId, newRole) {
     //Evaluamos el rol para traer los datos específicos de su tabla correspondiente
     if (user.rol === "student") {
       const [studentRows] = await pool.query(
-        "SELECT id AS student_id, weight, height, goal, medical_notes FROM students WHERE user_id = ?",
+        "SELECT id AS student_id, weight, height, goal, medical_notes, coach_id FROM students WHERE user_id = ?",
         [userId]
       );
       

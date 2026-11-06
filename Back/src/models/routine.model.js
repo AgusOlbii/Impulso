@@ -14,11 +14,12 @@ export class RoutineModel {
   // Buscar rutina por ID con detalles del profesor y alumno
   static async findById(id) {
     const [rows] = await pool.query(
-      `SELECT r.*, 
-              c.name AS coach_name, c.specialty AS coach_specialty,
+      `SELECT r.*,
+              cu.name AS coach_name, c.specialty AS coach_specialty, c.image AS coach_image,
               s.id AS student_id_profile, u.name AS student_name, u.lastname AS student_lastname
        FROM routines r
        JOIN coaches c ON r.coach_id = c.id
+       JOIN users cu ON c.user_id = cu.id
        JOIN students s ON r.student_id = s.id
        JOIN users u ON s.user_id = u.id
        WHERE r.id = ?`,
@@ -30,9 +31,10 @@ export class RoutineModel {
   // Obtener todas las rutinas asignadas a un alumno específico
   static async findByStudentId(student_id) {
     const [rows] = await pool.query(
-      `SELECT r.*, c.name AS coach_name, c.image AS coach_image
+      `SELECT r.*, cu.name AS coach_name, c.image AS coach_image, c.specialty AS coach_specialty
        FROM routines r
        JOIN coaches c ON r.coach_id = c.id
+       JOIN users cu ON c.user_id = cu.id
        WHERE r.student_id = ?
        ORDER BY r.start_date DESC`,
       [student_id]

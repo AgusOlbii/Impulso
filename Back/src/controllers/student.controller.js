@@ -1,4 +1,5 @@
 import { StudentModel } from "../models/student.model.js";
+import pool from "../config/db.js";
 
 //Obtener datos del Estudiante
 export const getStudentById = async (req, res) => {
@@ -48,4 +49,34 @@ export const updateStudent = async (req, res) => {
             message: "Error interno del servidor",
         });
     };
+};
+
+export const hireCoach = async (req, res) => {
+  try {
+    const coachId = req.body.coach_id ?? null;
+    const [studentRows] = await pool.query(
+      "SELECT id FROM students WHERE user_id = ?",
+      [req.user.id]
+    );
+    if (!studentRows.length) {
+      return res.status(404).json({ ok: false, message: "No se encontró el alumno" });
+    }
+    if (coachId) {
+      const [coachRows] = await pool.query(
+        "SELECT id FROM coaches WHERE id = ? AND available = TRUE",
+        [coachId]
+      );
+      if (!coachRows.length) {
+        return res.status(404).json({ ok: false, message: "Profesor no disponible" });
+      }
+    }
+    await pool.query("UPDATE students SET coach_id = ? WHERE user_id = ?", [
+      coachId,
+      req.user.id,
+    ]);
+    return res.json({ ok: true, coach_id: coachId });
+  } catch (error) {
+    console.error("Error al contratar profesor:", error);
+    return res.status(500).json({ ok: false, message: error.message });
+  }
 };

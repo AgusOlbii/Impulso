@@ -15,8 +15,13 @@ function PostularProfesor({ user }) {
   const enviarFormulario = async (e) => {
     e.preventDefault();
 
-    if (!especialidad || !experiencia || !descripcion) {
+    if (!especialidad || experiencia === "" || !descripcion.trim()) {
       setError("Completá especialidad, experiencia y descripción.");
+      return;
+    }
+
+    if (descripcion.trim().length < 10) {
+      setError("La descripción debe tener al menos 10 caracteres.");
       return;
     }
 

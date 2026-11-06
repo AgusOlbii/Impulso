@@ -15,11 +15,18 @@ export const createRoutineExerciseSchema = z.object({
 
 // Para cuando el alumno registra el entrenamiento realizado
 export const logStudentProgressSchema = z.object({
-  actual_sets: z.number().int().nonnegative("Series realizadas inválidas"),
-  actual_reps: z.number().int().nonnegative("Repeticiones realizadas inválidas"),
-  actual_weight: z.number().nonnegative("Peso realizado inválido"),
-  completed: z.boolean().default(true),
-});
+  actual_sets: z.coerce.number().int().nonnegative("Series realizadas inválidas").optional(),
+  actual_reps: z.coerce.number().int().nonnegative("Repeticiones realizadas inválidas").optional(),
+  actual_weight: z.coerce.number().nonnegative("Peso realizado inválido").optional(),
+  completed: z.boolean().optional(),
+}).refine(
+  (data) =>
+    data.actual_sets !== undefined ||
+    data.actual_reps !== undefined ||
+    data.actual_weight !== undefined ||
+    data.completed !== undefined,
+  { message: "Indicá el ajuste a guardar" }
+);
 
 export const updateRoutineExerciseSchema = createRoutineExerciseSchema
   .omit({ routine_id: true, exercise_id: true })

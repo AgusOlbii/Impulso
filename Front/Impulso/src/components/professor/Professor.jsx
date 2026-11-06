@@ -1,38 +1,48 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "../common/Icon";
 import Header from "../common/Header";
 import { currentDay } from "../../utils/date.now";
-import professors from "../../data/professors";
+import { coachService } from "../../services/coach.service";
+import { mediaUrl } from "../../utils/media";
 
-const students = [
-  { initials: "AM", name: "Agustín Méndez", goal: "Hipertrofia", status: "Revisión hoy", tone: "sand" },
-  { initials: "VC", name: "Valentina Costa", goal: "Fuerza", status: "Sin rutina", tone: "rose" },
-  { initials: "FR", name: "Facundo Ríos", goal: "Acondicionamiento", status: "En 3 días", tone: "blue" },
-  { initials: "MP", name: "Malena Paz", goal: "Movilidad", status: "Actualizada", tone: "green" },
-];
+const tones = ["sand", "rose", "blue", "green"];
 
 function Professor({ user }) {
   const [builderOpen, setBuilderOpen] = useState(false);
-  const [student, setStudent] = useState("Valentina Costa");
+  const [student, setStudent] = useState("");
   const [routineName, setRoutineName] = useState("Fuerza inicial");
   const [assigned, setAssigned] = useState([]);
+  const [alumnos, setAlumnos] = useState([]);
+  const [perfil, setPerfil] = useState(null);
+  const [price, setPrice] = useState("");
+  const [priceNotice, setPriceNotice] = useState("");
 
-  const perfil = professors.find(
-    (item) => item.name.toLowerCase() === user?.name?.toLowerCase()
-  );
+  useEffect(() => {
+    coachService.me().then((data) => {
+      setPerfil(data.coach);
+      setPrice(data.coach?.price ?? "");
+    }).catch(() => {});
+    coachService.myStudents().then((data) => {
+      const lista = (data.students || []).map((item, index) => ({
+        ...item,
+        displayName: `${item.name} ${item.lastname || ""}`.trim(),
+        initials: `${item.name?.[0] || "A"}${item.lastname?.[0] || ""}`.toUpperCase(),
+        tone: tones[index % tones.length],
+        status: Number(item.adjusted_count) > 0 ? "Ajustó la rutina" : "Asignado",
+        adjusted: Number(item.adjusted_count) > 0,
+      }));
+      setAlumnos(lista);
+      if (lista[0]) setStudent(lista[0].displayName);
+    }).catch(() => {});
+  }, []);
 
   const assignRoutine = () => {
     if (!routineName.trim()) return;
     setAssigned([...assigned, `${routineName} · ${student}`]);
     setBuilderOpen(false);
   };
-  //Instancio el useNavigate y luego creo el handleClick para poder ir a la ruta /students/directory
   const navigate = useNavigate();
-  const handleClick = () => {
-    // Aca pones exactamente el mismo path que definiste en App.jsx (por ejemplo, '/profesores' o '/detalle')
-    navigate('/students/directory');
-  };
 
   return (
     <>
@@ -44,16 +54,48 @@ function Professor({ user }) {
           <h2>Acompañá cada progreso.</h2>
           <p>
             {perfil
-              ? `${perfil.specialty} · ${perfil.experience}`
+              ? `${perfil.specialty} · ${perfil.experience}${
+                  Number(perfil.reviews) > 0
+                    ? ` · ${String(perfil.rating).replace(".", ",")} (${perfil.reviews})`
+                    : " · todavía sin valoraciones"
+                }`
               : "Tenés alumnos esperando seguimiento en sus rutinas."}
           </p>
+          <form
+            className="professor-price-form"
+            onSubmit={async (event) => {
+              event.preventDefault();
+              try {
+                const data = await coachService.updateMe({ price: Number(price) });
+                setPerfil(data.coach);
+                setPriceNotice("Tarifa actualizada. Los alumnos ya la ven en Profesores.");
+              } catch (error) {
+                setPriceNotice(error.message || "No se pudo guardar la tarifa.");
+              }
+            }}
+          >
+            <label>
+              <span>Tu valor mensual</span>
+              <input
+                type="number"
+                min="0"
+                step="100"
+                value={price}
+                onChange={(event) => setPrice(event.target.value)}
+              />
+            </label>
+            <button className="outline-button" type="submit">
+              Guardar valor
+            </button>
+          </form>
+          {priceNotice && <small>{priceNotice}</small>}
         </div>
-        {perfil && (
+        {(perfil?.image || user.image_url) && (
           <img
             className="professor-welcome-photo"
-            src={perfil.image}
-            alt={perfil.name}
-            style={{ objectPosition: perfil.position || "center 20%" }}
+            src={mediaUrl(perfil?.image || user.image_url)}
+            alt={user.name}
+            style={{ objectPosition: perfil?.position || "center 20%" }}
           />
         )}
         <button className="primary-button" onClick={() => setBuilderOpen(true)}>
@@ -80,8 +122,8 @@ function Professor({ user }) {
             <label>
               <span>Alumno</span>
               <select value={student} onChange={(event) => setStudent(event.target.value)}>
-                {students.map((item) => (
-                  <option key={item.name}>{item.name}</option>
+                {alumnos.map((item) => (
+                  <option key={item.id}>{item.displayName}</option>
                 ))}
               </select>
             </label>
@@ -153,7 +195,7 @@ function Professor({ user }) {
           </span>
           <div>
             <small>ALUMNOS ACTIVOS</small>
-            <strong>{students.length}</strong>
+            <strong>{alumnos.length}</strong>
             <p>seguimiento de la semana</p>
           </div>
         </article>
@@ -162,9 +204,13 @@ function Professor({ user }) {
             <Icon name="clipboard" />
           </span>
           <div>
-            <small>RUTINAS ACTIVAS</small>
-            <strong>3</strong>
-            <p>asignadas a tus alumnos</p>
+            <small>TU TARIFA</small>
+            <strong>
+              {Number(perfil?.price) > 0
+                ? `$${Number(perfil.price).toLocaleString("es-AR")}`
+                : "A definir"}
+            </strong>
+            <p>lo que ven tus alumnos</p>
           </div>
         </article>
         <article>
@@ -173,8 +219,8 @@ function Professor({ user }) {
           </span>
           <div>
             <small>POR REVISAR</small>
-            <strong>1</strong>
-            <p>Valentina sin rutina</p>
+            <strong>{alumnos.filter((item) => item.adjusted).length}</strong>
+            <p>alumnos que ajustaron la carga</p>
           </div>
         </article>
       </section>
@@ -186,37 +232,37 @@ function Professor({ user }) {
               <span className="eyebrow">SEGUIMIENTO</span>
               <h2>Mis alumnos</h2>
             </div>
-            <button onClick={handleClick} className="text-button">
-              Ver todos <Icon name="arrow" size={16} />
+            <button
+              onClick={() => navigate("/create/routine")}
+              className="text-button"
+            >
+              Crear rutina <Icon name="arrow" size={16} />
             </button>
           </div>
           <div className="student-list">
-            {students.map((item) => (
-              <article className="student-row" key={item.name}>
+            {alumnos.length === 0 && (
+              <p className="apply-account">Todavía no te contrató ningún alumno.</p>
+            )}
+            {alumnos.map((item) => (
+              <article className="student-row" key={item.id}>
                 <span className={`student-avatar ${item.tone}`}>{item.initials}</span>
                 <div className="student-name">
-                  <strong>{item.name}</strong>
+                  <strong>{item.displayName}</strong>
                   <small>Alumno asignado</small>
                 </div>
                 <div className="student-goal">
                   <span>OBJETIVO</span>
-                  <strong>{item.goal}</strong>
+                  <strong>{item.goal || "Sin especificar"}</strong>
                 </div>
-                <span
-                  className={`student-status ${item.status === "Sin rutina" ? "urgent" : ""}`}
-                >
+                <span className={`student-status ${item.adjusted ? "urgent" : ""}`}>
                   {item.status}
                 </span>
                 <button
                   className="student-action"
-                  onClick={() => {
-                    setStudent(item.name);
-                    setRoutineName(`${item.goal} · Nivel 1`);
-                    setBuilderOpen(true);
-                  }}
+                  onClick={() => navigate(`/create/routine?studentId=${item.id}`)}
                 >
-                  <Icon name={item.status === "Sin rutina" ? "plus" : "edit"} size={17} />
-                  <span>{item.status === "Sin rutina" ? "Crear" : "Editar"}</span>
+                  <Icon name="edit" size={17} />
+                  <span>Rutina</span>
                 </button>
               </article>
             ))}
