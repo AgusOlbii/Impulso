@@ -1,8 +1,30 @@
 import pool from "../config/db.js";
 
 export class ReviewModel {
+  static async ensureCoachRatingColumns() {
+    const [ratingCol] = await pool.query("SHOW COLUMNS FROM coaches LIKE 'rating'");
+    if (!ratingCol.length) {
+      await pool.query("ALTER TABLE coaches ADD COLUMN rating DECIMAL(3,2) NOT NULL DEFAULT 0");
+    }
+    const [reviewsCol] = await pool.query("SHOW COLUMNS FROM coaches LIKE 'reviews'");
+    if (!reviewsCol.length) {
+      await pool.query("ALTER TABLE coaches ADD COLUMN reviews INT NOT NULL DEFAULT 0");
+    }
+  }
+
+  static async refreshCoachRating(connection, coach_id) {
+    await connection.query(
+      `UPDATE coaches
+       SET rating = COALESCE((SELECT AVG(rating) FROM reviews WHERE coach_id = ?), 0),
+           reviews = (SELECT COUNT(*) FROM reviews WHERE coach_id = ?)
+       WHERE id = ?`,
+      [coach_id, coach_id, coach_id]
+    );
+  }
+
   // Crear una reseña y recargar las métricas del profesor
   static async create({ coach_id, student_id, rating, comment }) {
+    await this.ensureCoachRatingColumns();
     const connection = await pool.getConnection();
     try {
       await connection.beginTransaction();
@@ -11,17 +33,10 @@ export class ReviewModel {
       const [result] = await connection.query(
         `INSERT INTO reviews (coach_id, student_id, rating, comment)
          VALUES (?, ?, ?, ?)`,
-        [coach_id, student_id, rating, comment]
+        [coach_id, student_id, rating, comment || ""]
       );
 
-      // 2. Recalcular promedio y total de reseñas para el profesor
-      await connection.query(
-        `UPDATE coaches 
-         SET rating = (SELECT AVG(rating) FROM reviews WHERE coach_id = ?),
-             reviews = (SELECT COUNT(*) FROM reviews WHERE coach_id = ?)
-         WHERE id = ?`,
-        [coach_id, coach_id, coach_id]
-      );
+      await this.refreshCoachRating(connection, coach_id);
 
       await connection.commit();
       return { id: result.insertId, coach_id, student_id, rating, comment };
@@ -47,6 +62,26 @@ export class ReviewModel {
     return rows;
   }
 
+  static async update(id, { rating, comment, coach_id }) {
+    await this.ensureCoachRatingColumns();
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+      await connection.query(
+        `UPDATE reviews SET rating = ?, comment = ? WHERE id = ?`,
+        [rating, comment || "", id]
+      );
+      await this.refreshCoachRating(connection, coach_id);
+      await connection.commit();
+      return true;
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
+  }
+
   // Verificar si un alumno ya calificó a un profesor
   static async findByStudentAndCoach(student_id, coach_id) {
     const [rows] = await pool.query(
@@ -67,14 +102,7 @@ export class ReviewModel {
         [id]
       );
 
-      // Recalcular métricas
-      await connection.query(
-        `UPDATE coaches 
-         SET rating = COALESCE((SELECT AVG(rating) FROM reviews WHERE coach_id = ?), 0),
-             reviews = (SELECT COUNT(*) FROM reviews WHERE coach_id = ?)
-         WHERE id = ?`,
-        [coach_id, coach_id, coach_id]
-      );
+      await this.refreshCoachRating(connection, coach_id);
 
       await connection.commit();
       return result.affectedRows > 0;

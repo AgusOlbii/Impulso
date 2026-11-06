@@ -24,6 +24,7 @@ import {
   leerProfesorElegido,
   guardarProfesorElegido,
 } from "./data/eleccionProfesor";
+import { coachService } from "./services/coach.service";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -48,20 +49,45 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!user?.id) {
+    if (!user?.id || user.rol === "coach" || user.rol === "admin") {
+      if (user?.id) guardarProfesorElegido(user.id, null);
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setProfesorElegidoId(null);
       return;
     }
-    setProfesorElegidoId(leerProfesorElegido(user.id));
-  }, [user?.id]);
+    if (user.coach_id) {
+      setProfesorElegidoId(user.coach_id);
+      guardarProfesorElegido(user.id, user.coach_id);
+      return;
+    }
+    const guardado = leerProfesorElegido(user.id);
+    if (guardado && Number(guardado) >= 9000) {
+      setProfesorElegidoId(guardado);
+      return;
+    }
+    setProfesorElegidoId(null);
+    guardarProfesorElegido(user.id, null);
+  }, [user?.id, user?.rol, user?.coach_id]);
 
-  const elegirProfesor = (profesorId) => {
+  const elegirProfesor = async (profesorId) => {
+    if (Number(profesorId) >= 9000) {
+      if (user.coach_id && Number(user.coach_id) < 9000) {
+        await coachService.leave();
+        setUser((actual) => ({ ...actual, coach_id: null }));
+      }
+    } else {
+      await coachService.hire(profesorId);
+      setUser((actual) => ({ ...actual, coach_id: profesorId }));
+    }
     setProfesorElegidoId(profesorId);
     guardarProfesorElegido(user.id, profesorId);
   };
 
-  const dejarProfesor = () => {
+  const dejarProfesor = async () => {
+    if (user.coach_id && Number(user.coach_id) < 9000) {
+      await coachService.leave();
+      setUser((actual) => ({ ...actual, coach_id: null }));
+    }
     setProfesorElegidoId(null);
     guardarProfesorElegido(user.id, null);
   };
@@ -173,7 +199,7 @@ export default function App() {
 
                       {/* Rutas protegidas por rol */}
                       <Route element={<ProtectedRoute user={user} allowedRoles={["student"]} />}>
-                        <Route path="/rutina" element={<Routine profesorElegidoId={profesorElegidoId} />} />
+                        <Route path="/rutina" element={<Routine user={user} profesorElegidoId={profesorElegidoId} />} />
                         <Route path="/postular/profesor" element={<PostularProfesor user={user} />} />
                       </Route>
 
@@ -182,10 +208,13 @@ export default function App() {
                         <Route path="/create/routine" element={<CreateRoutine />} />
                       </Route>
 
+                      <Route element={<ProtectedRoute user={user} allowedRoles={["coach", "admin"]} />}>
+                        <Route path="/create/exercise" element={<ExerciseCreator />} />
+                      </Route>
+
                       <Route element={<ProtectedRoute user={user} allowedRoles={["admin"]} />}>
                         <Route path="/students/directory" element={<StudentsDirectory />} />
                         <Route path="/admin" element={<Admin />} />
-                        <Route path="/create/exercise" element={<ExerciseCreator />} />
                       </Route>
 
                       <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,8 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Header from "./Header";
 import Icon from "./Icon";
-import professors from "../../data/professors";
+import demoProfessors from "../../data/professors";
 import estadoEleccion from "../../config/reglasProfesor";
+import { coachService } from "../../services/coach.service";
+import { mediaUrl } from "../../utils/media";
+import { reviewService } from "../../services/review.service";
+import RatingStars from "./RatingStars";
+
+const PAGE_SIZE = 6;
 
 const specialties = [
   "Todos",
@@ -21,6 +27,14 @@ const contentByRol = {
     heroTitle: "Conectá con colegas de Impulso.",
     heroDescription:
       "Explorá el equipo de profesionales, especialidades y referencias del staff.",
+    showHireButton: false,
+  },
+  admin: {
+    eyebrow: "EQUIPO DE IMPULSO",
+    title: "Profesores",
+    heroTitle: "El staff activo de Impulso.",
+    heroDescription:
+      "Consultá el equipo de profesionales. Desde acá solo podés verlos; las altas y bajas se hacen en Administración.",
     showHireButton: false,
   },
   student: {
@@ -42,20 +56,82 @@ function textoBoton(estado) {
 
 function Profesores({ user, profesorElegidoId, onElegir, onDejar }) {
   const [filter, setFilter] = useState("Todos");
+  const [page, setPage] = useState(1);
   const [notice, setNotice] = useState("");
-  const [cambioPendiente, setCambioPendiente] = useState(null);
-  const copy = contentByRol[user?.rol] || contentByRol.coach;
+  const [pendiente, setPendiente] = useState(null);
+  const [approved, setApproved] = useState([]);
+  const [myRating, setMyRating] = useState(0);
+  const copy = contentByRol[user?.rol] || contentByRol.student;
+  const professors = [...approved, ...demoProfessors];
   const socio = { id: user?.id, profesorId: profesorElegidoId };
   const profesorActual = professors.find((item) => item.id === profesorElegidoId);
   const visibleCoaches =
     filter === "Todos"
       ? professors
       : professors.filter((coach) => coach.specialty === filter);
+  const totalPages = Math.max(1, Math.ceil(visibleCoaches.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pagedCoaches = visibleCoaches.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+  const rated = professors.filter((coach) => Number(coach.reviews) > 0);
+  const averageRating = rated.length
+    ? (
+        rated.reduce(
+          (total, coach) => total + Number(String(coach.rating).replace(",", ".")),
+          0
+        ) / rated.length
+      )
+        .toFixed(1)
+        .replace(".", ",")
+    : "—";
 
-  const contratar = (coach) => {
-    onElegir(coach.id);
-    setCambioPendiente(null);
-    setNotice(`Contrataste a ${coach.name}. Tu rutina ya está en Mi rutina.`);
+  const loadCoaches = () =>
+    coachService
+      .list()
+      .then((data) => setApproved(data.coaches || []))
+      .catch(() => setApproved([]));
+
+  useEffect(() => {
+    loadCoaches();
+  }, []);
+
+  useEffect(() => {
+    if (!profesorElegidoId || Number(profesorElegidoId) >= 9000) {
+      setMyRating(0);
+      return;
+    }
+    reviewService
+      .mine(profesorElegidoId)
+      .then((data) => setMyRating(Number(data.review?.rating) || 0))
+      .catch(() => setMyRating(0));
+  }, [profesorElegidoId]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filter]);
+
+  const cerrarPendiente = () => setPendiente(null);
+
+  const contratar = async (coach) => {
+    try {
+      await onElegir(coach.id);
+      cerrarPendiente();
+      setNotice(`Contrataste a ${coach.name}. Tu rutina ya está en Mi rutina.`);
+    } catch (error) {
+      setNotice(error.message || "No se pudo contratar al profesor.");
+    }
+  };
+
+  const dejar = async (coach) => {
+    try {
+      await onDejar();
+      cerrarPendiente();
+      setNotice(`Dejaste de entrenar con ${coach.name}.`);
+    } catch (error) {
+      setNotice(error.message || "No se pudo dejar al profesor.");
+    }
   };
 
   return (
@@ -77,7 +153,7 @@ function Profesores({ user, profesorElegidoId, onElegir, onDejar }) {
             certificados
           </span>
           <i />
-          <strong>4,9</strong>
+          <strong>{averageRating}</strong>
           <span>
             valoración
             <br />
@@ -95,7 +171,10 @@ function Profesores({ user, profesorElegidoId, onElegir, onDejar }) {
                 key={specialty}
                 type="button"
                 className={`filter ${filter === specialty ? "active" : ""}`}
-                onClick={() => setFilter(specialty)}
+                onClick={() => {
+                  setFilter(specialty);
+                  setPage(1);
+                }}
               >
                 {specialty}
               </button>
@@ -118,7 +197,7 @@ function Profesores({ user, profesorElegidoId, onElegir, onDejar }) {
       )}
 
       <section className="coach-grid">
-        {visibleCoaches.map((coach) => {
+        {pagedCoaches.map((coach) => {
           const estado = estadoEleccion(socio, coach);
           const puedeClick =
             estado === "puede" ||
@@ -129,7 +208,7 @@ function Profesores({ user, profesorElegidoId, onElegir, onDejar }) {
             <article className="coach-card" key={coach.id}>
               <div className="coach-photo">
                 <img
-                  src={coach.image}
+                  src={mediaUrl(coach.image) || coach.image}
                   alt={`${coach.name}, profesor de ${coach.specialty}`}
                   style={{ objectPosition: coach.position }}
                 />
@@ -149,10 +228,10 @@ function Profesores({ user, profesorElegidoId, onElegir, onDejar }) {
                   <span className="coach-rating">
                     <Icon name="star" size={14} />
                     <strong>{coach.rating}</strong>
-                    <small>({coach.reviews})</small>
+                    <small>({Number(coach.reviews) || 0})</small>
                   </span>
                 </div>
-                <p>{coach.description}</p>
+                {coach.description?.trim() ? <p>{coach.description}</p> : <p>Todavía no cargó una presentación.</p>}
                 <div className="coach-card-footer">
                   <div>
                     <span>DESDE</span>
@@ -166,11 +245,10 @@ function Profesores({ user, profesorElegidoId, onElegir, onDejar }) {
                       className={`hire-button ${estado === "ya_elegido" ? "hired" : ""}`}
                       onClick={() => {
                         if (estado === "ya_elegido") {
-                          onDejar();
-                          setNotice(`Dejaste de entrenar con ${coach.name}.`);
+                          setPendiente({ accion: "dejar", coach });
                           return;
                         }
-                        setCambioPendiente(coach);
+                        setPendiente({ accion: "contratar", coach });
                       }}
                     >
                       {estado === "ya_elegido" ? (
@@ -185,17 +263,59 @@ function Profesores({ user, profesorElegidoId, onElegir, onDejar }) {
                     </button>
                   )}
                 </div>
+                {copy.showHireButton && estado === "ya_elegido" && Number(coach.id) < 9000 && (
+                  <div className="coach-rate">
+                    <span>Calificar</span>
+                    <RatingStars
+                      value={myRating}
+                      onChange={async (rating) => {
+                        const previous = myRating;
+                        setMyRating(rating);
+                        try {
+                          await reviewService.save({ coachId: coach.id, rating });
+                          await loadCoaches();
+                        } catch (error) {
+                          setMyRating(previous);
+                          setNotice(error.message || "No se pudo guardar la calificación.");
+                        }
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             </article>
           );
         })}
       </section>
 
-      {cambioPendiente && (
-        <div
-          className="confirm-overlay"
-          onClick={() => setCambioPendiente(null)}
-        >
+      {totalPages > 1 && (
+        <div className="coach-pagination">
+          <button
+            type="button"
+            className="icon-button coach-page-prev"
+            disabled={currentPage <= 1}
+            onClick={() => setPage((actual) => Math.max(1, actual - 1))}
+            aria-label="Página anterior"
+          >
+            <Icon name="arrow" size={18} />
+          </button>
+          <span>
+            {currentPage} / {totalPages}
+          </span>
+          <button
+            type="button"
+            className="icon-button"
+            disabled={currentPage >= totalPages}
+            onClick={() => setPage((actual) => Math.min(totalPages, actual + 1))}
+            aria-label="Página siguiente"
+          >
+            <Icon name="arrow" size={18} />
+          </button>
+        </div>
+      )}
+
+      {pendiente && (
+        <div className="confirm-overlay" onClick={cerrarPendiente}>
           <div
             className="confirm-modal"
             role="dialog"
@@ -204,44 +324,61 @@ function Profesores({ user, profesorElegidoId, onElegir, onDejar }) {
             onClick={(event) => event.stopPropagation()}
           >
             <span className="eyebrow">
-              {profesorActual ? "CAMBIO DE PROFESOR" : "CONTRATAR PROFESOR"}
+              {pendiente.accion === "dejar"
+                ? "DEJAR PROFESOR"
+                : profesorActual
+                  ? "CAMBIO DE PROFESOR"
+                  : "CONTRATAR PROFESOR"}
             </span>
             <h3 id="confirm-change-title">
-              {profesorActual
-                ? "¿Cambiar de entrenador?"
-                : `¿Contratar a ${cambioPendiente.name}?`}
+              {pendiente.accion === "dejar"
+                ? `¿Dejar de entrenar con ${pendiente.coach.name}?`
+                : profesorActual
+                  ? "¿Cambiar de entrenador?"
+                  : `¿Contratar a ${pendiente.coach.name}?`}
             </h3>
             <p>
-              {profesorActual ? (
+              {pendiente.accion === "dejar" ? (
+                <>
+                  Vas a quedar sin profesor asignado. Tu rutina se mantiene
+                  hasta que elijas otro entrenador.
+                </>
+              ) : profesorActual ? (
                 <>
                   Hoy entrenás con <strong>{profesorActual.name}</strong>. Si
-                  pasás a <strong>{cambioPendiente.name}</strong>, se reemplaza
+                  pasás a <strong>{pendiente.coach.name}</strong>, se reemplaza
                   tu rutina semanal por la de esa persona.
                 </>
               ) : (
                 <>
-                  Vas a entrenar con <strong>{cambioPendiente.name}</strong>{" "}
-                  ({cambioPendiente.specialty}). En Mi rutina vas a ver el plan
+                  Vas a entrenar con <strong>{pendiente.coach.name}</strong>{" "}
+                  ({pendiente.coach.specialty}). En Mi rutina vas a ver el plan
                   semanal que armó para vos.
                 </>
               )}
             </p>
             <div className="confirm-actions">
-              <button
-                type="button"
-                className="text-button"
-                onClick={() => setCambioPendiente(null)}
-              >
-                {profesorActual
-                  ? `Seguir con ${profesorActual.name.split(" ")[0]}`
-                  : "Cancelar"}
+              <button type="button" className="text-button" onClick={cerrarPendiente}>
+                {pendiente.accion === "dejar"
+                  ? "Seguir con este profesor"
+                  : profesorActual
+                    ? `Seguir con ${profesorActual.name.split(" ")[0]}`
+                    : "Cancelar"}
               </button>
               <button
                 type="button"
                 className="primary-button"
-                onClick={() => contratar(cambioPendiente)}
+                onClick={() =>
+                  pendiente.accion === "dejar"
+                    ? dejar(pendiente.coach)
+                    : contratar(pendiente.coach)
+                }
               >
-                {profesorActual ? "Sí, cambiar" : "Sí, contratar"}
+                {pendiente.accion === "dejar"
+                  ? "Sí, dejar"
+                  : profesorActual
+                    ? "Sí, cambiar"
+                    : "Sí, contratar"}
               </button>
             </div>
           </div>

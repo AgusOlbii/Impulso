@@ -20,6 +20,10 @@ export const adminService = {
       method: "PATCH",
     });
   },
-  
-  
+  removeCoach(id, confirmName) {
+    return request(`/admin/coaches/${id}`, {
+      method: "DELETE",
+      body: JSON.stringify({ confirm_name: confirmName }),
+    });
+  },
 };

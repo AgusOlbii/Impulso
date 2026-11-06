@@ -1,40 +1,60 @@
 import pool from "../config/db.js";
 
 export class CoachModel {
+  static async ensureStudentNoteColumn() {
+    const [cols] = await pool.query("SHOW COLUMNS FROM coaches LIKE 'student_note'");
+    if (cols.length) return;
+    await pool.query("ALTER TABLE coaches ADD COLUMN student_note TEXT NULL");
+  }
+
   // Crear un nuevo perfil de profesor (se ejecuta al aprobar la solicitud)
-  static async create({ user_id, name, specialty, experience, price, description, image, position }) {
+  static async create({ user_id, specialty, experience, price, description, image, position }) {
     const [result] = await pool.query(
       `INSERT INTO coaches (user_id, specialty, experience, price, description, image, position, available)
        VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)`,
-      [user_id, name, specialty, experience, price, description, image || null, position || null]
+      [user_id, specialty, experience, price, description, image || null, position || null]
     );
-    return { id: result.insertId, user_id, name, specialty, price };
+    return { id: result.insertId, user_id, specialty, price };
   }
 
   // Obtener la lista pública de profesores disponibles
   static async findAllAvailable() {
     const [rows] = await pool.query(
-      `SELECT c.*, u.email, u.phone 
+      `SELECT c.*, u.name, u.lastname, u.email, u.phone, u.image_url,
+              ca.description AS application_description,
+              COALESCE(sc.student_count, 0) AS student_count
        FROM coaches c
        JOIN users u ON c.user_id = u.id
-       WHERE c.available = TRUE AND u.is_active = TRUE`
+       LEFT JOIN coach_applications ca
+         ON ca.user_id = c.user_id AND ca.status = 'approved'
+       LEFT JOIN (
+         SELECT coach_id, COUNT(*) AS student_count
+         FROM students
+         WHERE coach_id IS NOT NULL
+         GROUP BY coach_id
+       ) sc ON sc.coach_id = c.id
+       WHERE c.available = TRUE AND u.is_active = TRUE
+       ORDER BY c.id DESC`
     );
     return rows;
   }
  // Obtener la lista de todos los students de un profesor
  static async getStudentsByCoach(coach_id) {
   const [rows] = await pool.query(
-    `SELECT DISTINCT 
-          u.id AS student_id, 
-          u.name, 
-          u.email, 
-          p.status AS latest_payment_status,
-          p.created_at AS last_interaction
-       FROM payments p
-       JOIN users u ON p.student_id = u.id
-       WHERE p.coach_id = ? AND p.status = 'completed'
-       ORDER BY p.created_at DESC`,
-    [coach_id]
+    `SELECT s.id, s.user_id, s.weight, s.height, s.goal, s.medical_notes, s.coach_note,
+            u.name, u.lastname, u.email,
+            COALESCE(rt.routine_count, 0) AS routine_count
+     FROM students s
+     JOIN users u ON s.user_id = u.id
+     LEFT JOIN (
+       SELECT student_id, COUNT(*) AS routine_count
+       FROM routines
+       WHERE coach_id = ?
+       GROUP BY student_id
+     ) rt ON rt.student_id = s.id
+     WHERE s.coach_id = ?
+     ORDER BY u.name ASC`,
+    [coach_id, coach_id]
   );
   return rows;
 }
@@ -55,7 +75,7 @@ export class CoachModel {
       `SELECT c.*, u.name, u.lastname, u.email, u.phone, u.image_url AS avatar
        FROM coaches c
        JOIN users u ON c.user_id = u.id
-       WHERE c.name = ?`,
+       WHERE u.name = ?`,
       [name]
     );
     return rows[0];

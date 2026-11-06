@@ -13,13 +13,13 @@ const DAYS_OF_WEEK = [
 
 // Esquema para cada ejercicio individual dentro de la rutina
 const routineExerciseSchema = z.object({
-  exercise_id: z.number().int().positive("El ID del ejercicio es obligatorio"),
+  exercise_id: z.coerce.number().int().positive("El ID del ejercicio es obligatorio"),
   day_of_week: z.enum(DAYS_OF_WEEK, { 
     errorMap: () => ({ message: "Día de la semana no válido" }) 
   }),
-  target_sets: z.number().int().positive("Las series deben ser mayor a 0"),
-  target_reps: z.number().int().positive("Las repeticiones deben ser mayor a 0"),
-  target_weight: z.number().min(0, "El peso no puede ser negativo").default(0),
+  target_sets: z.coerce.number().int().positive("Las series deben ser mayor a 0"),
+  target_reps: z.coerce.number().int().positive("Las repeticiones deben ser mayor a 0"),
+  target_weight: z.coerce.number().min(0, "El peso no puede ser negativo").default(0),
 });
 
 // Esquema principal para crear la rutina completa
@@ -32,4 +32,10 @@ export const createRoutineSchema = z.object({
   
   // La rutina debe venir obligatoriamente con un array de ejercicios
   exercises: z.array(routineExerciseSchema).min(1, "La rutina debe incluir al menos un ejercicio"),
+});
+
+export const updateRoutineSchema = createRoutineSchema.omit({ student_id: true }).partial({
+  start_date: true,
+  end_date: true,
+  description: true,
 });

@@ -11,6 +11,20 @@ export const coachApplicationController = {
         return res.status(400).json({ errors: validation.error.errors });
       }
 
+      const existing = await CoachApplicationModel.findByUserId(req.user.id);
+      if (existing?.status === "pending") {
+        return res.status(409).json({
+          ok: false,
+          message: "Ya hiciste la solicitud. Esperá la respuesta del administrador.",
+        });
+      }
+      if (existing?.status === "approved") {
+        return res.status(409).json({
+          ok: false,
+          message: "Ya formas parte del equipo de profesores.",
+        });
+      }
+
       const applicationId = await CoachApplicationModel.create(validation.data);
       return res.status(201).json({ message: "Solicitud enviada con éxito", id: applicationId });
     } catch (error) {
@@ -21,14 +35,14 @@ export const coachApplicationController = {
   async getMyApplicationStatus(req, res) {
     try {
       const userId = req.user.id; 
-      console.log("🔎 Buscando solicitud para el user_id:", userId);
+      console.log("Buscando solicitud para el user_id:", userId);
       
       const application = await CoachApplicationModel.findByUserId(userId);
-      console.log("📦 Solicitud encontrada en BD:", application);
+      console.log("Solicitud encontrada en BD:", application);
 
-      return res.json(application);
+      return res.json(application || null);
     } catch (error) {
-      console.error("🔥 Error al obtener la postulación:", error);
+      console.error("Error al obtener la postulación:", error);
       return res.status(500).json({ error: error.message });
     }
   }

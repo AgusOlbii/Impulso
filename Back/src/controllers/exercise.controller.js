@@ -13,6 +13,14 @@ export const createExercise = async (req, res) => {
             });
         }
 
+        const alreadyExists = await ExerciseModel.findByName(name);
+        if (alreadyExists) {
+            return res.status(409).json({
+                ok: false,
+                message: "Ese ejercicio ya está en la biblioteca.",
+            });
+        }
+
         const newExerciseId = await ExerciseModel.create({
             name,
             description,
