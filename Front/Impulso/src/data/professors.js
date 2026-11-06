@@ -1,6 +1,6 @@
 const professors = [
   {
-    id: 1,
+    id: 9001,
     name: "Martín López",
     specialty: "Fuerza",
     rating: "4,9",
@@ -12,7 +12,7 @@ const professors = [
     position: "center 28%",
   },
   {
-    id: 2,
+    id: 9002,
     name: "Lucas Rodriguez",
     specialty: "Cardio",
     rating: "4,8",
@@ -24,7 +24,7 @@ const professors = [
     position: "center 35%",
   },
   {
-    id: 3,
+    id: 9003,
     name: "Diego Pérez",
     specialty: "Musculación",
     rating: "4,9",
@@ -34,42 +34,6 @@ const professors = [
     experience: "10 años de experiencia",
     image: "https://images.unsplash.com/photo-1694712301331-1088f9dacb1a?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=85&w=900",
     position: "center 22%",
-  },
-  {
-    id: 4,
-    name: "Javier Veron",
-    specialty: "Funcional",
-    rating: "4,7",
-    reviews: 51,
-    price: "$14.000",
-    description: "Movimiento funcional, movilidad y coordinación para sentirte mejor en tu día a día.",
-    experience: "5 años de experiencia",
-    image: "https://images.unsplash.com/photo-1623605931891-d5b95ee98459?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=85&w=900",
-    position: "center 30%",
-  },
-  {
-    id: 5,
-    name: "Joaquín Luna",
-    specialty: "Cross Training",
-    rating: "4,8",
-    reviews: 73,
-    price: "$17.500",
-    description: "Desafíos de alta intensidad adaptados a tu nivel para superar tus propias marcas.",
-    experience: "7 años de experiencia",
-    image: "https://images.unsplash.com/photo-1693214099505-aadb39c60c90?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=85&w=900",
-    position: "center 25%",
-  },
-  {
-    id: 6,
-    name: "Camila Benítez",
-    specialty: "Movilidad",
-    rating: "5,0",
-    reviews: 46,
-    price: "$16.000",
-    description: "Movilidad, recuperación y prevención de lesiones para entrenar con mayor libertad.",
-    experience: "6 años de experiencia",
-    image: "https://images.unsplash.com/photo-1746559845100-0f5a36bfdbe6?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=85&w=900",
-    position: "center 32%",
   },
 ];
 

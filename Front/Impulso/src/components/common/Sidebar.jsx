@@ -3,6 +3,7 @@ import adminNavigation from "../../data/adminNavigation";
 import professorNavigation from '../../data/professorNavigation';
 import studentNavigation from "../../data/studentNavigation";
 import Icon from "./Icon";
+import { mediaUrl } from "../../utils/media";
 
 
 function Sidebar({ user }) {
@@ -61,7 +62,13 @@ function Sidebar({ user }) {
           to="/perfil" 
           className={({ isActive }) => `profile-mini ${isActive ? "active" : ""}`}
         >
-          <div className="avatar">{user.image_url}</div>
+          <div className="avatar">
+            {user.image_url ? (
+              <img src={mediaUrl(user.image_url)} alt={user.name} />
+            ) : (
+              `${(user.name?.[0] || "U").toUpperCase()}${(user.lastname?.[0] || "").toUpperCase()}`
+            )}
+          </div>
           <div>
             <div className="profile-name">{user.name}</div>
             <div className="profile-role">

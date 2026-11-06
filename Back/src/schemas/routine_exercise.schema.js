@@ -15,10 +15,10 @@ export const createRoutineExerciseSchema = z.object({
 
 // Para cuando el alumno registra el entrenamiento realizado
 export const logStudentProgressSchema = z.object({
-  actual_sets: z.number().int().nonnegative("Series realizadas inválidas"),
-  actual_reps: z.number().int().nonnegative("Repeticiones realizadas inválidas"),
-  actual_weight: z.number().nonnegative("Peso realizado inválido"),
-  completed: z.boolean().default(true),
+  actual_sets: z.coerce.number().int().nonnegative("Series realizadas inválidas"),
+  actual_reps: z.coerce.number().int().nonnegative("Repeticiones realizadas inválidas"),
+  actual_weight: z.coerce.number().nonnegative("Peso realizado inválido"),
+  completed: z.boolean().optional(),
 });
 
 export const updateRoutineExerciseSchema = createRoutineExerciseSchema
