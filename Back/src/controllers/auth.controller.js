@@ -108,8 +108,13 @@ export const register = async (req, res) => {
       return res.status(409).json({
         ok: false,
         message: "El correo electrónico ya se encuentra registrado",
-      });
+      }); 
     }
+    if (error.message === "DNI_ALREADY_EXISTS") {
+      return res.status(409).json({
+        ok: false,
+        message: "El DNI ya se encuentra registrado",
+      })};
 
     console.error("Error en el registro:", error);
     return res.status(500).json({
