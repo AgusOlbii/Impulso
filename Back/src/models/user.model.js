@@ -1,4 +1,5 @@
 import pool from "../config/db.js";
+import { StudentModel } from "./student.model.js";
 
 export class UserModel {
   // Crear un nuevo usuario
@@ -47,47 +48,53 @@ export class UserModel {
     return rows;
   }
 
-  // Actualizar datos de usuario
- static async update(userId, fields) {
-  //Consultamos el rol del usuario para saber qué tabla específica actualizar
-  const [userRows] = await pool.query(
-    "SELECT rol FROM users WHERE id = ?",
-    [userId]
-  );
-
-  if (userRows.length === 0) return false;
-  const rol = userRows[0].rol;
-
-  // Campos que pertenecen estrictamente a la tabla 'users'
-  const userFieldsKeys = ["name", "lastname", "email", "phone", "dni", "birthday", "image_url"];
-  
-  const userUpdates = {};
-  const specificUpdates = {};
-
-  for (const [key, value] of Object.entries(fields)) {
-    // Limpiamos cadenas vacías o indefinidas para convertirlas en null (evita errores en MySQL)
-    const cleanValue = (value === "" || value === undefined) ? null : value;
-
-    if (userFieldsKeys.includes(key)) {
-      userUpdates[key] = cleanValue;
-    } else {
-      specificUpdates[key] = cleanValue;
-    }
-  }
-
-  // Ejecutamos la actualizacion en la tabla 'users' si hay cambios
-  if (Object.keys(userUpdates).length > 0) {
-    const keys = Object.keys(userUpdates);
-    const setClause = keys.map((key) => `${key} = ?`).join(", ");
-    const values = Object.values(userUpdates);
-
-    await pool.query(
-      `UPDATE users SET ${setClause} WHERE id = ?`,
-      [...values, userId]
+  static async update(userId, fields) {
+    const [userRows] = await pool.query(
+      "SELECT rol FROM users WHERE id = ?",
+      [userId]
     );
+
+    if (userRows.length === 0) return false;
+    const rol = userRows[0].rol;
+
+    const userFieldsKeys = ["name", "lastname", "email", "phone", "dni", "birthday", "image_url"];
+    const studentFieldsKeys = ["weight", "height", "goal", "medical_notes"];
+    const userUpdates = {};
+    const studentUpdates = {};
+
+    for (const [key, value] of Object.entries(fields)) {
+      let cleanValue = value === "" || value === undefined ? null : value;
+      if (key === "birthday" && cleanValue) {
+        cleanValue = String(cleanValue).split("T")[0];
+      }
+      if (userFieldsKeys.includes(key)) {
+        userUpdates[key] = cleanValue;
+      } else if (studentFieldsKeys.includes(key)) {
+        studentUpdates[key] = cleanValue;
+      }
+    }
+
+    if (Object.keys(userUpdates).length > 0) {
+      const keys = Object.keys(userUpdates);
+      const setClause = keys.map((key) => `${key} = ?`).join(", ");
+      await pool.query(
+        `UPDATE users SET ${setClause} WHERE id = ?`,
+        [...Object.values(userUpdates), userId]
+      );
+    }
+
+    if (rol === "student" && Object.keys(studentUpdates).length > 0) {
+      await StudentModel.ensureCoachColumn();
+      const keys = Object.keys(studentUpdates);
+      const setClause = keys.map((key) => `${key} = ?`).join(", ");
+      await pool.query(
+        `UPDATE students SET ${setClause} WHERE user_id = ?`,
+        [...Object.values(studentUpdates), userId]
+      );
+    }
+
+    return true;
   }
-  return true;
-}
 // Actualizar rol del usuario
 static async updateRole(userId, newRole) {
   const [result] = await pool.query(
@@ -118,8 +125,10 @@ static async updateRole(userId, newRole) {
 
     //Evaluamos el rol para traer los datos específicos de su tabla correspondiente
     if (user.rol === "student") {
+      await StudentModel.ensureCoachColumn();
+      await StudentModel.ensureCoachNoteColumn();
       const [studentRows] = await pool.query(
-        "SELECT id AS student_id, weight, height, goal, medical_notes FROM students WHERE user_id = ?",
+        "SELECT id AS student_id, weight, height, goal, medical_notes, coach_id, coach_note FROM students WHERE user_id = ?",
         [userId]
       );
       

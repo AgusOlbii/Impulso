@@ -2,7 +2,7 @@ const estadoEleccion = (socio, profesor) => {
   if (profesor.status && profesor.status !== "approved") {
     return "no_disponible";
   }
-  if (socio.profesorId === profesor.id) {
+  if (Number(socio.profesorId) === Number(profesor.id)) {
     return "ya_elegido";
   }
   if (socio.profesorId) {

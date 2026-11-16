@@ -1,17 +1,38 @@
 import { ReviewModel } from "../models/review.model.js";
+import { StudentModel } from "../models/student.model.js";
 
 // Crear una reseña (Lo hace el alumno)
 export const createReview = async (req, res) => {
     try {
-        const student_id = req.user.id; // ID del alumno autenticado 
+        await StudentModel.ensureCoachColumn();
+        const student = await StudentModel.findByUserId(req.user.id);
+        if (!student) {
+            return res.status(404).json({
+                ok: false,
+                message: "No se encontró el alumno",
+            });
+        }
+        const student_id = student.id;
         const { coach_id, rating, comment } = req.body;
+        const assignedCoachId = Number(student.coach_id);
+        if (!assignedCoachId || assignedCoachId !== Number(coach_id)) {
+            return res.status(403).json({
+                ok: false,
+                message: "Solo podés calificar al profesor que tenés asignado",
+            });
+        }
 
-        // Verificar si el alumno ya calificó a este profesor previamente
         const existingReview = await ReviewModel.findByStudentAndCoach(student_id, coach_id);
         if (existingReview) {
-            return res.status(400).json({
-                ok: false,
-                message: "Ya has calificado a este profesor anteriormente."
+            await ReviewModel.update(existingReview.id, {
+                coach_id,
+                rating,
+                comment,
+            });
+            return res.status(200).json({
+                ok: true,
+                message: "Tu calificación se actualizó",
+                review: { ...existingReview, rating, comment: comment || "" },
             });
         }
 
@@ -31,8 +52,22 @@ export const createReview = async (req, res) => {
         console.error("Error al crear la reseña:", error);
         return res.status(500).json({
             ok: false,
-            message: "Error interno del servidor"
+            message: error.message || "Error interno del servidor"
         });
+    }
+};
+
+export const getMyReview = async (req, res) => {
+    try {
+        const student = await StudentModel.findByUserId(req.user.id);
+        if (!student) {
+            return res.status(404).json({ ok: false, message: "No se encontró el alumno" });
+        }
+        const review = await ReviewModel.findByStudentAndCoach(student.id, req.params.coach_id);
+        return res.status(200).json({ ok: true, review: review || null });
+    } catch (error) {
+        console.error("Error al obtener la reseña:", error);
+        return res.status(500).json({ ok: false, message: "Error interno del servidor" });
     }
 };
 

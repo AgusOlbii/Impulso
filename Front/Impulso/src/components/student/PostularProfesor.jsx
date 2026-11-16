@@ -1,17 +1,15 @@
 import { useState, useEffect } from "react";
 import Header from "../common/Header";
 import Icon from "../common/Icon";
-import { coachService } from "../../services/coach.service"; 
-import { applicationService } from "../../services/application.service"; 
+import { coachService } from "../../services/coach.service";
+import { applicationService } from "../../services/application.service";
 
 function PostularProfesor({ user }) {
   const [especialidad, setEspecialidad] = useState("");
   const [experiencia, setExperiencia] = useState("");
   const [descripcion, setDescripcion] = useState("");
-  
   const [application, setApplication] = useState(null);
   const [checkingStatus, setCheckingStatus] = useState(true);
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -19,9 +17,9 @@ function PostularProfesor({ user }) {
     const fetchMyApplication = async () => {
       try {
         const data = await applicationService.getMyApplication();
-        setApplication(data); 
-      } catch (err) {
-        console.error("Error al verificar la postulación:", err);
+        setApplication(data?.status ? data : null);
+      } catch {
+        setApplication(null);
       } finally {
         setCheckingStatus(false);
       }
@@ -32,6 +30,7 @@ function PostularProfesor({ user }) {
 
   const enviarFormulario = async (e) => {
     e.preventDefault();
+    if (application?.status === "pending" || application?.status === "approved") return;
 
     if (!especialidad || !experiencia || !descripcion) {
       setError("Completá especialidad, experiencia y descripción.");
@@ -41,17 +40,13 @@ function PostularProfesor({ user }) {
     try {
       setLoading(true);
       setError("");
-
-      const payload = {
+      await coachService.sendApplication({
         specialty: especialidad,
         experience: Number(experiencia),
         description: descripcion,
-      };
-
-      await coachService.sendApplication(payload);
+      });
       const updatedApp = await applicationService.getMyApplication();
-      setApplication(updatedApp || { status: "pending" });
-
+      setApplication(updatedApp?.status ? updatedApp : { status: "pending" });
     } catch (err) {
       setError(err.message || "Hubo un error al enviar la solicitud al servidor.");
     } finally {
@@ -69,7 +64,9 @@ function PostularProfesor({ user }) {
       </>
     );
   }
-console.log(application.status)
+
+  const waiting = application?.status === "pending" || application?.status === "approved";
+
   return (
     <>
       <Header eyebrow="COMUNIDAD" title="Quiero ser profesor" />
@@ -79,37 +76,36 @@ console.log(application.status)
           <span className="tag bright">POSTULACIÓN</span>
           <h2>Sumate al equipo, {user?.name || "socio"}.</h2>
           <p>
-            Ya tenemos tu nombre y tu email de la cuenta. Completá tu perfil
-            profesional para enviarlo a revisión del administrador.
+            {waiting
+              ? "Tu solicitud ya está en curso. No hace falta volver a enviarla."
+              : "Ya tenemos tu nombre y tu email de la cuenta. Completá tu perfil profesional para enviarlo a revisión del administrador."}
           </p>
         </div>
       </section>
 
       <section className="apply-card">
-        {/* Si ya existe una solicitud previa (pendiente o aprobada), mostramos su estado */}
-        {application && (application.status === "pending" || application.status === "approved")  ? (
-          <div className="success-message" style={{ flexDirection: "column", alignItems: "flex-start", gap: "8px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <Icon name="check" size={18} />
-              <span>
-                {application.status === "pending" && "¡Solicitud enviada con éxito! Tu postulación se encuentra pendiente de revisión por un administrador."}
-                {application.status === "approved" && "¡Felicitaciones! Tu solicitud fue aprobada y ya formas parte del staff de profesores."}
-              </span>
-            </div>
+        {application?.status === "pending" && (
+          <div className="success-message">
+            <Icon name="check" size={18} />
+            <span>Ya hiciste la solicitud. Esperá la respuesta del administrador.</span>
           </div>
-        ) : (
-          <>
-            {}
-            {application && application.status === "rejected" && (
-              <div className="success-message" style={{ backgroundColor: "#fee2e2", color: "#991b1b", marginBottom: "20px", flexDirection: "column", alignItems: "flex-start", gap: "8px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <Icon name="alert" size={18} />
-                  <span>
-                    Tu solicitud anterior fue rechazada. Podés corregir los datos y volver a enviarla.
-                  </span>
-                </div>
-              </div>
-            )}
+        )}
+
+        {application?.status === "approved" && (
+          <div className="success-message">
+            <Icon name="check" size={18} />
+            <span>Tu solicitud fue aprobada y ya formas parte del staff de profesores.</span>
+          </div>
+        )}
+
+        {application?.status === "rejected" && !waiting && (
+          <div className="success-message">
+            <Icon name="bell" size={18} />
+            <span>Tu solicitud anterior fue rechazada. Podés corregir los datos y volver a enviarla.</span>
+          </div>
+        )}
+
+        {!waiting && (
           <form className="apply-form" onSubmit={enviarFormulario}>
             <p className="apply-account">
               Postulándote como <strong>{user?.name}</strong> · {user?.email}
@@ -159,9 +155,7 @@ console.log(application.status)
               <Icon name="arrow" size={16} />
             </button>
           </form>
-          </>
         )}
-        
       </section>
     </>
   );

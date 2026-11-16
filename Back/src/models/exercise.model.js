@@ -14,7 +14,11 @@ export class ExerciseModel {
   // Obtener todos los ejercicios del catálogo global
   static async findAll() {
     const [rows] = await pool.query(
-      `SELECT * FROM exercises ORDER BY muscle_group ASC, name ASC`
+      `SELECT e.*, COUNT(re.id) AS routine_count
+       FROM exercises e
+       LEFT JOIN routine_exercises re ON re.exercise_id = e.id
+       GROUP BY e.id
+       ORDER BY e.muscle_group ASC, e.name ASC`
     );
     return rows;
   }
@@ -31,7 +35,7 @@ export class ExerciseModel {
     // Buscar un ejercicio por su Nombre
   static async findByName(name) {
     const [rows] = await pool.query(
-      `SELECT * FROM exercises WHERE id = ?`,
+      `SELECT * FROM exercises WHERE LOWER(TRIM(name)) = LOWER(TRIM(?))`,
       [name]
     );
     return rows[0];

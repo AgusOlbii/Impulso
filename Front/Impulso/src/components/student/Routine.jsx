@@ -1,59 +1,160 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../common/Header";
 import Icon from "../common/Icon";
-import professors from "../../data/professors";
-import rutinasPorProfesor from "../../data/rutinasPorProfesor";
+import { coachService } from "../../services/coach.service";
+import { routineService } from "../../services/routine.service";
+import { mediaUrl } from "../../utils/media";
+import { asNumber, assignedLabel } from "../../utils/routineChanges";
+import StepperField, { parseStepperValue, stepperNumber } from "../common/StepperField";
 
-function Routine({ profesorElegidoId }) {
+function currentValue(exercise, actualKey, targetKey) {
+  return asNumber(exercise[actualKey]) ?? asNumber(exercise[targetKey]) ?? 0;
+}
+
+function Routine({ user, profesorElegidoId }) {
   const navigate = useNavigate();
-  const [diaActivo, setDiaActivo] = useState();
-  const [completed, setCompleted] = useState([]);
+  const [routine, setRoutine] = useState(null);
+  const [profesor, setProfesor] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [diaActivo, setDiaActivo] = useState(null);
+  const [edits, setEdits] = useState({});
+  const [notice, setNotice] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  const profesor = professors.find((item) => item.id === profesorElegidoId);
-  const rutinaSemanal = profesor
-    ? rutinasPorProfesor[profesor.id]
-    : null;
-  const dia =
-    diaActivo === null
-      ? null
-      : rutinaSemanal?.find((item) => item.id === diaActivo) ??
-        rutinaSemanal?.[0] ??
-        null;
-  const totalDia = dia ? dia.ejercicios.length : 0;
-  const hechosDia = dia
-    ? dia.ejercicios.filter((ejercicio) => completed.includes(ejercicio.id))
-        .length
-    : 0;
-  const progreso = totalDia ? (hechosDia / totalDia) * 100 : 0;
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      routineService.mine().catch(() => ({ routine: null })),
+      coachService.list().catch(() => ({ coaches: [] })),
+    ]).then(([routineData, coachData]) => {
+      if (!active) return;
+      setRoutine(routineData.routine || null);
+      const coaches = coachData.coaches || [];
+      setProfesor(
+        coaches.find((item) => Number(item.id) === Number(profesorElegidoId || user?.coach_id)) || null,
+      );
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
+    return () => {
+      active = false;
+    };
+  }, [profesorElegidoId, user?.coach_id]);
 
-  const toggleDia = (id) => {
-    setDiaActivo((actual) => (actual === id ? null : id));
+  const days = useMemo(() => {
+    const seen = [];
+    (routine?.exercises || []).forEach((exercise) => {
+      if (exercise.day_of_week && !seen.includes(exercise.day_of_week)) {
+        seen.push(exercise.day_of_week);
+      }
+    });
+    return seen;
+  }, [routine]);
+
+  const dia = diaActivo && days.includes(diaActivo) ? diaActivo : days[0] || null;
+  const ejercicios = (routine?.exercises || []).filter((item) => item.day_of_week === dia);
+  const baselineOf = (exercise) => ({
+    sets: currentValue(exercise, "actual_sets", "target_sets"),
+    reps: currentValue(exercise, "actual_reps", "target_reps"),
+    weight: currentValue(exercise, "actual_weight", "target_weight"),
+  });
+
+  const updateEdit = (exercise, field, amount, raw) => {
+    const key = String(exercise.routine_exercise_id);
+    const decimal = field === "weight";
+    setEdits((actual) => {
+      const current = actual[key] || baselineOf(exercise);
+      const next = raw !== undefined
+        ? parseStepperValue(raw, { decimal })
+        : Math.max(0, stepperNumber(current[field]) + amount);
+      return {
+        ...actual,
+        [key]: {
+          ...current,
+          [field]: next,
+        },
+      };
+    });
+    setNotice("");
   };
 
-  const toggleEjercicio = (id) => {
-    setCompleted((lista) =>
-      lista.includes(id) ? lista.filter((item) => item !== id) : [...lista, id]
-    );
+  const valueOf = (exercise, field) => {
+    const edited = edits[String(exercise.routine_exercise_id)];
+    if (edited) return edited[field];
+    return baselineOf(exercise)[field];
   };
 
-  if (!profesor || !rutinaSemanal) {
+  const dirtyExercises = ejercicios.filter((exercise) => {
+    const edited = edits[String(exercise.routine_exercise_id)];
+    if (!edited) return false;
+    const baseline = baselineOf(exercise);
+    return edited.sets !== baseline.sets || edited.reps !== baseline.reps || edited.weight !== baseline.weight;
+  });
+
+  const saveDay = async () => {
+    if (dirtyExercises.length === 0) return;
+    setSaving(true);
+    setNotice("");
+    try {
+      await Promise.all(
+        dirtyExercises.map((exercise) =>
+          routineService.saveProgress(exercise.routine_exercise_id, {
+            actual_sets: valueOf(exercise, "sets"),
+            actual_reps: valueOf(exercise, "reps"),
+            actual_weight: valueOf(exercise, "weight"),
+          }),
+        ),
+      );
+      const data = await routineService.mine();
+      setRoutine(data.routine || null);
+      setEdits({});
+      setNotice("Guardamos tus cambios. Tu profesor va a ver el aviso, sin modificar lo que te asignó.");
+    } catch (error) {
+      setNotice(error.message || "No se pudieron guardar los cambios.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
     return (
       <>
         <Header eyebrow="PLAN PERSONALIZADO" title="Mi rutina" />
         <section className="creator-heading">
           <div>
-            <span className="tag bright">SIN ENTRENADOR</span>
-            <h2>Todavía no elegiste profesor.</h2>
+            <span className="tag bright">CARGANDO</span>
+            <h2>Estamos trayendo tu plan.</h2>
+          </div>
+        </section>
+      </>
+    );
+  }
+
+  if (!routine) {
+    return (
+      <>
+        <Header eyebrow="PLAN PERSONALIZADO" title="Mi rutina" />
+        <section className="creator-heading">
+          <div>
+            <span className="tag bright">{profesorElegidoId ? "SIN RUTINA" : "SIN ENTRENADOR"}</span>
+            <h2>
+              {profesorElegidoId
+                ? "Tu profesor todavía no te asignó una rutina."
+                : "Todavía no elegiste profesor."}
+            </h2>
             <p>
-              Contratá un entrenador en Profesores y acá vas a ver la rutina
-              que armó para la semana.
+              {profesorElegidoId
+                ? "Cuando arme tu plan, vas a poder bajar series, repeticiones o peso y avisarle."
+                : "Contratá un entrenador en Profesores y acá vas a ver la rutina que armó para la semana."}
             </p>
           </div>
-          <button className="primary-button" onClick={() => navigate("/profesores")}>
-            Ver profesores
-            <Icon name="arrow" size={16} />
-          </button>
+          {!profesorElegidoId && (
+            <button className="primary-button" onClick={() => navigate("/profesores")}>
+              Ver profesores
+              <Icon name="arrow" size={16} />
+            </button>
+          )}
         </section>
       </>
     );
@@ -64,24 +165,13 @@ function Routine({ profesorElegidoId }) {
       <Header eyebrow="PLAN PERSONALIZADO" title="Mi rutina" />
       <div className="routine-banner">
         <div>
-          <span className="tag bright">
-            {dia ? dia.nombre.toUpperCase() : "ELEGÍ UN DÍA"}
-          </span>
-          <h2>{dia ? dia.titulo : "Tu semana de entrenamiento"}</h2>
+          <span className="tag bright">{dia ? dia.toUpperCase() : "ELEGÍ UN DÍA"}</span>
+          <h2>{routine.title || "Tu semana de entrenamiento"}</h2>
           <p>
-            Diseñada por {profesor.name} · {profesor.specialty}
+            {profesor
+              ? `Diseñada por ${profesor.name} ${profesor.lastname || ""} · ${profesor.specialty || ""}`
+              : "Mantenés tu rutina. Ahora no tenés profesor asignado."}
           </p>
-        </div>
-        <div
-          className="routine-progress"
-          style={{ "--progress": `${progreso}%` }}
-        >
-          <div className="routine-progress-inner">
-            <strong>
-              {hechosDia}/{totalDia || 0}
-            </strong>
-            <span>ejercicios</span>
-          </div>
         </div>
       </div>
       <div className="routine-layout">
@@ -91,68 +181,102 @@ function Routine({ profesorElegidoId }) {
               <span className="eyebrow">SEMANA</span>
               <h2>Días de entrenamiento</h2>
             </div>
-            <span className="duration">
-              <Icon name="clock" size={17} /> 50–60 min
-            </span>
           </div>
 
           <div className="routine-days">
-            {rutinaSemanal.map((item) => (
+            {days.map((item) => (
               <button
-                key={item.id}
+                key={item}
                 type="button"
-                className={`routine-day ${dia?.id === item.id ? "active" : ""}`}
-                onClick={() => toggleDia(item.id)}
+                className={`routine-day ${dia === item ? "active" : ""}`}
+                onClick={() => setDiaActivo(item)}
               >
-                {item.nombre}
+                {item}
               </button>
             ))}
           </div>
 
+          {notice && (
+            <div className="success-message creator-notice">
+              <span>{notice}</span>
+            </div>
+          )}
+
           {dia && (
             <div className="exercise-list">
-              {dia.ejercicios.map((exercise) => {
-                const done = completed.includes(exercise.id);
-                return (
-                  <button
-                    className={`exercise ${done ? "done" : ""}`}
-                    key={exercise.id}
-                    type="button"
-                    onClick={() => toggleEjercicio(exercise.id)}
-                  >
-                    <span className="exercise-number">
-                      {done ? <Icon name="check" size={18} /> : exercise.number}
-                    </span>
-                    <span className="exercise-name">
-                      <strong>{exercise.name}</strong>
-                      <small>{exercise.detail}</small>
-                    </span>
-                    <span className="muscle">{exercise.muscle}</span>
-                    <span className="weight">
-                      <strong>{exercise.weight}</strong>
-                      <small>PESO</small>
-                    </span>
-                    <Icon name="arrow" size={18} />
-                  </button>
-                );
-              })}
+              {ejercicios.map((exercise, index) => (
+                <article className="exercise editable" key={exercise.routine_exercise_id}>
+                  <span className="exercise-number">{String(index + 1).padStart(2, "0")}</span>
+                  <span className="exercise-name">
+                    <strong>{exercise.name}</strong>
+                    <small>Asignado: {assignedLabel(exercise)}</small>
+                  </span>
+                  <span className="muscle">{exercise.muscle_group}</span>
+                  <div className="exercise-config triple">
+                    <div>
+                      <label>SERIES</label>
+                      <StepperField
+                        label={`series de ${exercise.name}`}
+                        value={valueOf(exercise, "sets")}
+                        onStep={(amount) => updateEdit(exercise, "sets", amount)}
+                        onChange={(raw) => updateEdit(exercise, "sets", 0, raw)}
+                      />
+                    </div>
+                    <div>
+                      <label>REPETICIONES</label>
+                      <StepperField
+                        label={`repeticiones de ${exercise.name}`}
+                        value={valueOf(exercise, "reps")}
+                        onStep={(amount) => updateEdit(exercise, "reps", amount)}
+                        onChange={(raw) => updateEdit(exercise, "reps", 0, raw)}
+                      />
+                    </div>
+                    <div>
+                      <label>PESO</label>
+                      <StepperField
+                        label={`peso de ${exercise.name}`}
+                        decimal
+                        value={valueOf(exercise, "weight")}
+                        onStep={(amount) => updateEdit(exercise, "weight", amount)}
+                        onChange={(raw) => updateEdit(exercise, "weight", 0, raw)}
+                      />
+                    </div>
+                  </div>
+                </article>
+              ))}
+              <button className="primary-button creator-save" disabled={saving || dirtyExercises.length === 0} onClick={saveDay}>
+                <Icon name="check" size={17} /> {saving ? "Guardando..." : "Guardar cambios"}
+              </button>
             </div>
           )}
         </section>
         <aside className="coach-note">
-          <img
-            className="avatar coach"
-            src={profesor.image || profesor.photo}
-            alt={profesor.name}
-            style={{ objectPosition: profesor.position || "center 20%" }}
-          />
-          <span className="eyebrow">NOTA DE TU ENTRENADOR</span>
+          {profesor?.image && (
+            <img
+              className="avatar coach"
+              src={mediaUrl(profesor.image)}
+              alt={profesor.name}
+            />
+          )}
+          <span className="eyebrow">{profesor ? "NOTA DE TU ENTRENADOR" : "SIN PROFESOR"}</span>
           <p>
-            “Esta semana priorizá la calidad del movimiento. Si cierra fácil,
-            subí un poco la carga o el ritmo.”
+            {user?.coach_note?.trim()
+              ? `“${user.coach_note}”`
+              : profesor
+                ? "Tu profesor todavía no dejó una nota."
+                : "Tu rutina se mantiene. Podés elegir un nuevo profesor en Profesores."}
           </p>
-          <strong>{profesor.name}</strong>
-          <small>{profesor.specialty}</small>
+          {profesor ? (
+            <>
+              <strong>{profesor.name} {profesor.lastname || ""}</strong>
+              <small>{profesor.specialty}</small>
+            </>
+          ) : (
+            <button className="text-button" type="button" onClick={() => navigate("/profesores")}>
+              Ver profesores
+              <Icon name="arrow" size={16} />
+            </button>
+          )}
         </aside>
       </div>
     </>

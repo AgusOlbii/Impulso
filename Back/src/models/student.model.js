@@ -1,6 +1,27 @@
 import pool from "../config/db.js";
 
 export class StudentModel {
+  static async ensureCoachColumn() {
+    const [cols] = await pool.query("SHOW COLUMNS FROM students LIKE 'coach_id'");
+    if (cols.length) return;
+    await pool.query("ALTER TABLE students ADD COLUMN coach_id INT NULL");
+    try {
+      await pool.query(
+        `ALTER TABLE students
+         ADD CONSTRAINT fk_student_coach
+         FOREIGN KEY (coach_id) REFERENCES coaches(id) ON DELETE SET NULL`
+      );
+    } catch {
+      // La FK puede existir si se creó a mano
+    }
+  }
+
+  static async ensureCoachNoteColumn() {
+    const [cols] = await pool.query("SHOW COLUMNS FROM students LIKE 'coach_note'");
+    if (cols.length) return;
+    await pool.query("ALTER TABLE students ADD COLUMN coach_note TEXT NULL");
+  }
+
   // Crear el perfil del alumno
   static async create({ user_id }) {
     const [result] = await pool.query(
@@ -14,7 +35,7 @@ export class StudentModel {
   // Buscar perfil de alumno por student_id (incluyendo datos base de users)
   static async findById(id) {
     const [rows] = await pool.query(
-      `SELECT s.*, u.name, u.lastname, u.email, u.phone, u.dni, u.birthday u.image_url, u.is_active
+      `SELECT s.*, u.name, u.lastname, u.email, u.phone, u.dni, u.birthday, u.image_url, u.is_active
        FROM students s
        JOIN users u ON s.user_id = u.id
        WHERE s.id = ?`,
@@ -26,7 +47,7 @@ export class StudentModel {
   // Buscar perfil de alumno por user_id
   static async findByUserId(user_id) {
     const [rows] = await pool.query(
-      `SELECT s.*, u.name, u.lastname, u.email, u.dni, u.phone, u.bithday, u.image_url
+      `SELECT s.*, u.name, u.lastname, u.email, u.dni, u.phone, u.birthday, u.image_url
        FROM students s
        JOIN users u ON s.user_id = u.id
        WHERE s.user_id = ?`,
@@ -41,7 +62,7 @@ export class StudentModel {
       `SELECT s.*, u.name, u.lastname, u.email, u.phone, u.birthday, u.image_url, u.is_active
        FROM students s
        JOIN users u ON s.user_id = u.id
-       ORDER BY s.created_at DESC`
+       ORDER BY s.id DESC`
     );
     return rows;
   }
@@ -49,12 +70,13 @@ export class StudentModel {
 //Actualizar datos de la tabla students y sus respectivos campos en tabl user
 static async update(studentId, fields) {
   const [studentRows] = await pool.query(
-    "SELECT user_id FROM students WHERE user_id = ?",
-    [studentId]
+    "SELECT id, user_id FROM students WHERE id = ? OR user_id = ?",
+    [studentId, studentId]
   );
 
   if (studentRows.length === 0) return false;
   const userId = studentRows[0].user_id;
+  const rowId = studentRows[0].id;
 
   const userFieldsKeys = ["name", "lastname", "email", "phone", "dni", "birthday", "image_url"];
   
@@ -92,7 +114,7 @@ static async update(studentId, fields) {
 
     await pool.query(
       `UPDATE students SET ${setClause} WHERE id = ?`,
-      [...values, studentId]
+      [...values, rowId]
     );
   }
 

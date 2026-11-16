@@ -1,6 +1,6 @@
 export const validateSchema = (schema) => (req, res, next) => {
   try {
-    schema.parse(req.body);
+    req.body = schema.parse(req.body);
     next();
   } catch (error) {
     // En Zod, los errores de validación vienen en .issues, no de .errors

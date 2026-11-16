@@ -109,6 +109,26 @@ export class RoutineModel {
         return routine;
     }
 
+    static async findLatestByStudentId(studentId) {
+        const [rows] = await pool.query(
+            `SELECT id FROM routines WHERE student_id = ? ORDER BY id DESC LIMIT 1`,
+            [studentId]
+        );
+        if (!rows.length) return null;
+        return this.findById(rows[0].id);
+    }
+
+    static async findExerciseWithRoutine(routineExerciseId) {
+        const [rows] = await pool.query(
+            `SELECT re.*, r.student_id, r.coach_id
+             FROM routine_exercises re
+             JOIN routines r ON r.id = re.routine_id
+             WHERE re.id = ?`,
+            [routineExerciseId]
+        );
+        return rows[0];
+    }
+
     // 3. Obtener todas las rutinas asignadas a un estudiante específico
     static async findByStudentId(studentId) {
         const [rows] = await pool.query(
@@ -136,6 +156,61 @@ export class RoutineModel {
             [actual_sets, actual_reps, actual_weight, completed, routineExerciseId]
         );
         return result.affectedRows > 0;
+    }
+
+    static async replace(id, { title, description, start_date, end_date, exercises }) {
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+            const sets = [];
+            const values = [];
+            if (title !== undefined) {
+                sets.push("title = ?");
+                values.push(title);
+            }
+            if (description !== undefined) {
+                sets.push("description = ?");
+                values.push(description || null);
+            }
+            if (start_date !== undefined) {
+                sets.push("start_date = ?");
+                values.push(start_date);
+            }
+            if (end_date !== undefined) {
+                sets.push("end_date = ?");
+                values.push(end_date);
+            }
+            if (sets.length) {
+                await connection.query(
+                    `UPDATE routines SET ${sets.join(", ")} WHERE id = ?`,
+                    [...values, id]
+                );
+            }
+
+            await connection.query(`DELETE FROM routine_exercises WHERE routine_id = ?`, [id]);
+            const exerciseValues = exercises.map((item) => [
+                id,
+                item.exercise_id,
+                item.day_of_week,
+                item.target_sets,
+                item.target_reps,
+                item.target_weight || 0.00,
+            ]);
+            await connection.query(
+                `INSERT INTO routine_exercises
+                    (routine_id, exercise_id, day_of_week, target_sets, target_reps, target_weight)
+                 VALUES ?`,
+                [exerciseValues]
+            );
+
+            await connection.commit();
+            return true;
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
     }
 
     // 5. Eliminar una rutina (ON DELETE CASCADE limpia automaticamente routine_exercises)

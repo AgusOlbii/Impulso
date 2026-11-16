@@ -11,5 +11,6 @@ router.get("/coach-applications", authenticateToken, authorizeRoles("admin"), ad
 router.patch("/coach-applications/:id/approve", authenticateToken, authorizeRoles("admin"), adminController.approveApplication);
 // Rechaza la solicitud
 router.patch("/coach-applications/:id/reject", authenticateToken, authorizeRoles("admin"), adminController.rejectApplication);
+router.delete("/coaches/:id", authenticateToken, authorizeRoles("admin"), adminController.removeCoach);
 
 export default router;

@@ -24,17 +24,17 @@ export function register(userData) {
   });
 }
 
-export const updateProfile = async (user, formData) => {
-  // Mapeamos el endpoint según el rol del usuario
-  const endpoints = {
-    student: `/students/${user.id}/update`,
-    coach: `/coaches/${user.id}/update`,
-  };
+export function uploadPhoto(file) {
+  const body = new FormData();
+  body.append("photo", file);
+  return request("/users/me/photo", {
+    method: "POST",
+    body,
+  });
+}
 
-  // Si el rol no coincide con student ni coach, usa el por defecto (/users/:id/update)
-  const endpoint = endpoints[user.rol] || `/users/${user.id}/update`;
-
-  return request(endpoint, {
+export const updateProfile = async (_user, formData) => {
+  return request("/users/me", {
     method: "PUT",
     body: JSON.stringify(formData),
   });
