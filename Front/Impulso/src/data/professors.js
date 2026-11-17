@@ -1,6 +1,6 @@
 const professors = [
   {
-    id: 9001,
+    id: 90000000001,
     name: "Martín López",
     specialty: "Fuerza",
     rating: "4,9",
@@ -12,7 +12,7 @@ const professors = [
     position: "center 28%",
   },
   {
-    id: 9002,
+    id: 9000000002,
     name: "Lucas Rodriguez",
     specialty: "Cardio",
     rating: "4,8",
@@ -24,7 +24,7 @@ const professors = [
     position: "center 35%",
   },
   {
-    id: 9003,
+    id: 9000003,
     name: "Diego Pérez",
     specialty: "Musculación",
     rating: "4,9",

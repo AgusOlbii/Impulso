@@ -16,23 +16,24 @@ export class CoachModel {
     );
     return { id: result.insertId, user_id, specialty, price };
   }
-
-  // Obtener la lista pública de profesores disponibles
+ 
+// Obtener la lista pública de profesores disponibles
   static async findAllAvailable() {
     const [rows] = await pool.query(
       `SELECT c.*, u.name, u.lastname, u.email, u.phone, u.image_url,
-              ca.description AS application_description,
-              COALESCE(sc.student_count, 0) AS student_count
+              (
+                SELECT ca.description 
+                FROM coach_applications ca 
+                WHERE ca.user_id = c.user_id AND ca.status = 'approved' 
+                ORDER BY ca.id DESC LIMIT 1
+              ) AS application_description,
+              (
+                SELECT COUNT(s.id) 
+                FROM students s 
+                WHERE s.coach_id = c.id
+              ) AS student_count
        FROM coaches c
        JOIN users u ON c.user_id = u.id
-       LEFT JOIN coach_applications ca
-         ON ca.user_id = c.user_id AND ca.status = 'approved'
-       LEFT JOIN (
-         SELECT coach_id, COUNT(*) AS student_count
-         FROM students
-         WHERE coach_id IS NOT NULL
-         GROUP BY coach_id
-       ) sc ON sc.coach_id = c.id
        WHERE c.available = TRUE AND u.is_active = TRUE
        ORDER BY c.id DESC`
     );

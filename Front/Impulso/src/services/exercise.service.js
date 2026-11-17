@@ -10,6 +10,12 @@ export const exerciseService = {
       body: JSON.stringify(payload),
     });
   },
+  update(id, payload) {
+    return request(`/exercise/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  },
   remove(id) {
     return request(`/exercise/${id}`, {
       method: "DELETE",

@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { 
     createExercise, 
-    getExercises, 
+    getExercises,
+    updateExercise,
     deleteExercise 
 } from "../controllers/exercise.controller.js";
 import { validateSchema } from "../middlewares/validateSchema.js";
@@ -16,6 +17,8 @@ router.get("/", authenticateToken, getExercises);
 // Crear un ejercicio (generalmente restringido a coaches o administradores)
 router.post("/", authenticateToken, authorizeRoles("admin", "coach"), validateSchema(createExerciseSchema), createExercise);
 
+// Actualizar un ejercicio
+router.put("/:id", authenticateToken, authorizeRoles("admin", "coach"), updateExercise);
 // Eliminar un ejercicio por ID
 router.delete("/:id", authenticateToken, authorizeRoles("admin", "coach"), deleteExercise);
 

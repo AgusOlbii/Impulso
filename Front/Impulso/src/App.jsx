@@ -126,7 +126,6 @@ export default function App() {
   if (checkingSession) {
     return <div className="app-loading">Verificando sesión...</div>;
   }
-  console.log(user)
   return (
 
     <BrowserRouter>

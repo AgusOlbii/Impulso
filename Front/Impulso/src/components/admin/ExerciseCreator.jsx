@@ -35,13 +35,30 @@ function ExerciseCreator() {
   const [saving, setSaving] = useState(false);
   const [pendingDelete, setPendingDelete] = useState(null);
 
+  // Estados para el modal de edición
+  const [editingExercise, setEditingExercise] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editPrimaryMuscle, setEditPrimaryMuscle] = useState("");
+  const [editAntagonistMuscles, setEditAntagonistMuscles] = useState([]);
+  const [editVideoUrl, setEditVideoUrl] = useState("");
+  const [updating, setUpdating] = useState(false);
+
   const loadExercises = async () => {
     const data = await exerciseService.list();
     setExercises(data.exercises || []);
   };
 
-  useEffect(() => {
-    loadExercises().catch(() => setError("No se pudieron cargar los ejercicios."));
+ useEffect(() => {
+    const loadExercises = async () => {
+      try {
+        const data = await exerciseService.list();
+        setExercises(data.exercises || []);
+      } catch {
+        setError("No se pudieron cargar los ejercicios.");
+      }
+    };
+
+    loadExercises();
   }, []);
 
   const existingMatch = exercises.find((item) => sameName(item.name, name));
@@ -51,6 +68,14 @@ function ExerciseCreator() {
       antagonistMuscles.includes(muscle)
         ? antagonistMuscles.filter((item) => item !== muscle)
         : [...antagonistMuscles, muscle],
+    );
+  };
+
+  const toggleEditAntagonist = (muscle) => {
+    setEditAntagonistMuscles(
+      editAntagonistMuscles.includes(muscle)
+        ? editAntagonistMuscles.filter((item) => item !== muscle)
+        : [...editAntagonistMuscles, muscle],
     );
   };
 
@@ -70,10 +95,6 @@ function ExerciseCreator() {
       }
       await exerciseService.create(payload);
       setCreatedExercise({ name, primaryMuscle, antagonistMuscles, videoUrl });
-      setName("");
-      setPrimaryMuscle("");
-      setAntagonistMuscles([]);
-      setVideoUrl("");
       await loadExercises();
     } catch (err) {
       setError(err.message || "No se pudo crear el ejercicio.");
@@ -92,6 +113,51 @@ function ExerciseCreator() {
     } catch (err) {
       setError(err.message || "No se pudo eliminar el ejercicio.");
       setPendingDelete(null);
+    }
+  };
+
+  const openEditModal = (exercise) => {
+    setEditingExercise(exercise);
+    setEditName(exercise.name || "");
+    setEditPrimaryMuscle(exercise.muscle_group || "");
+    setEditVideoUrl(exercise.video_url || "");
+    
+    if (exercise.description && exercise.description.startsWith("Antagonistas: ")) {
+      const antagonistsList = exercise.description
+        .replace("Antagonistas: ", "")
+        .split(", ")
+        .map((m) => m.trim())
+        .filter(Boolean);
+      setEditAntagonistMuscles(antagonistsList);
+    } else {
+      setEditAntagonistMuscles([]);
+    }
+  };
+
+  const submitUpdate = async (event) => {
+    event.preventDefault();
+    if (!editingExercise) return;
+    setUpdating(true);
+    setError("");
+    try {
+      const payload = {
+        name: editName.trim(),
+        muscle_group: editPrimaryMuscle,
+        video_url: editVideoUrl.trim() || null,
+      };
+      if (editAntagonistMuscles.length) {
+        payload.description = `Antagonistas: ${editAntagonistMuscles.join(", ")}`;
+      } else {
+        payload.description = null;
+      }
+
+      await exerciseService.update(editingExercise.id, payload);
+      setEditingExercise(null);
+      await loadExercises();
+    } catch (err) {
+      setError(err.message || "No se pudo actualizar el ejercicio.");
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -208,7 +274,7 @@ function ExerciseCreator() {
           )}
         </aside>
       </div>
-
+      {/*Catalogo de ejercicios*/}
       <section className="exercise-catalog">
         <div className="creator-panel-head">
           <div>
@@ -227,21 +293,112 @@ function ExerciseCreator() {
                   <strong>{item.name}</strong>
                   <small>{item.muscle_group}{Number(item.routine_count) > 0 ? ` · en ${item.routine_count} rutina${Number(item.routine_count) === 1 ? "" : "s"}` : ""}</small>
                 </div>
-                <button
-                  type="button"
-                  className="student-action"
-                  onClick={() => setPendingDelete(item)}
-                  aria-label={`Eliminar ${item.name}`}
-                >
-                  <Icon name="trash" size={16} />
-                  <span>Eliminar</span>
-                </button>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button
+                    type="button"
+                    className="student-action"
+                    onClick={() => openEditModal(item)}
+                    aria-label={`Editar ${item.name}`}
+                  >
+                    <Icon name="edit" size={16} />
+                    <span>Editar</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="student-action"
+                    onClick={() => setPendingDelete(item)}
+                    aria-label={`Eliminar ${item.name}`}
+                  >
+                    <Icon name="trash" size={16} />
+                    <span>Eliminar</span>
+                  </button>
+                </div>
               </article>
             ))}
           </div>
         )}
       </section>
 
+      {/* Modal de Edición */}
+      {editingExercise && (
+        <div className="confirm-overlay" onClick={() => setEditingExercise(null)}>
+          <div
+            className="confirm-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-exercise-title"
+            onClick={(event) => event.stopPropagation()}
+            style={{ maxWidth: "500px", width: "100%" }}
+          >
+            <span className="eyebrow">MODIFICAR EJERCICIO</span>
+            <h3 id="edit-exercise-title">Editar ejercicio</h3>
+            
+            <form onSubmit={submitUpdate} style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "16px" }}>
+              <label className="create-field">
+                <span>Nombre del ejercicio</span>
+                <input 
+                  value={editName} 
+                  onChange={(event) => setEditName(event.target.value)} 
+                  required 
+                />
+              </label>
+
+              <label className="create-field">
+                <span>Músculo principal</span>
+                <select 
+                  value={editPrimaryMuscle} 
+                  onChange={(event) => {
+                    setEditPrimaryMuscle(event.target.value);
+                    setEditAntagonistMuscles(editAntagonistMuscles.filter((muscle) => muscle !== event.target.value));
+                  }} 
+                  required
+                >
+                  <option value="" disabled>Seleccionar grupo muscular</option>
+                  {muscleOptions.map((muscle) => <option key={muscle}>{muscle}</option>)}
+                </select>
+              </label>
+
+              <fieldset className="antagonist-field">
+                <legend>Músculos antagonistas</legend>
+                <div className="muscle-options">
+                  {muscleOptions.filter((muscle) => muscle !== editPrimaryMuscle).map((muscle) => {
+                    const selected = editAntagonistMuscles.includes(muscle);
+                    return (
+                      <button type="button" key={muscle} className={selected ? "selected" : ""} onClick={() => toggleEditAntagonist(muscle)}>
+                        {selected && <Icon name="check" size={13} />}{muscle}
+                      </button>
+                    );
+                  })}
+                </div>
+              </fieldset>
+
+              <label className="create-field video-url-field">
+                <span>URL del video</span>
+                <div>
+                  <Icon name="arrow" size={17} />
+                  <input 
+                    value={editVideoUrl} 
+                    onChange={(event) => setEditVideoUrl(event.target.value)} 
+                    type="url" 
+                    placeholder="https://servidor.com/videos/ejercicio.mp4" 
+                  />
+                </div>
+              </label>
+
+              <div className="confirm-actions" style={{ marginTop: "10px" }}>
+                <button type="button" className="text-button" onClick={() => setEditingExercise(null)}>
+                  Cancelar
+                </button>
+                <button type="submit" className="primary-button" disabled={updating}>
+                  {updating ? "Guardando..." : "Guardar cambios"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Eliminación */}
       {pendingDelete && (
         <div className="confirm-overlay" onClick={() => setPendingDelete(null)}>
           <div
