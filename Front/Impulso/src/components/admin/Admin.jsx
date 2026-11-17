@@ -132,7 +132,7 @@ function Admin() {
         </div>
       )}
 
-      {/* KPIs de ejemplo (puedes conectarlos a una API de métricas más adelante) */}
+      {/* KPIs de ejemplo */}
       <section className="admin-kpis">
         <article><div className="kpi-top"><span className="stat-icon lime"><Icon name="users" /></span><span className="kpi-trend positive">+8,4%</span></div><small>SOCIOS TOTALES</small><strong>482</strong><p>37 altas este mes</p></article>
         <article><div className="kpi-top"><span className="stat-icon"><Icon name="shield" /></span><span className="kpi-trend positive">+3,2%</span></div><small>MEMBRESÍAS ACTIVAS</small><strong>417</strong><p>86,5% del total</p></article>

@@ -33,6 +33,19 @@ export const getUserById = async (userId) => {
   return user;
 };
 
+export const createSession = async (userId) => {
+  const user = await UserModel.findByIdWithRoleData(userId);
+  if (!user) {
+    throw new Error("USER_NOT_FOUND");
+  }
+  const token = jwt.sign(
+    { id: user.id, rol: user.rol },
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+  return { token, user };
+};
+
 export const registerUser = async ({ name, lastname, email, password, rol, phone, dni, birthday, is_active, image_url }) => {
   // 1. Normalizar los datos
   const cleanName = name.trim();

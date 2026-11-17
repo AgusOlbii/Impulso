@@ -1,10 +1,17 @@
 function StepperField({ value, onStep, onChange, label, decimal = false }) {
+  const change = (amount) => (event) => {
+    event.preventDefault();
+    onStep(amount);
+  };
+
   return (
     <span className="stepper">
       <button
         type="button"
-        onMouseDown={(event) => event.preventDefault()}
-        onClick={() => onStep(-1)}
+        onMouseDown={change(-1)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") change(-1)(event);
+        }}
         aria-label={`Reducir ${label}`}
       >
         −
@@ -19,8 +26,10 @@ function StepperField({ value, onStep, onChange, label, decimal = false }) {
       />
       <button
         type="button"
-        onMouseDown={(event) => event.preventDefault()}
-        onClick={() => onStep(1)}
+        onMouseDown={change(1)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") change(1)(event);
+        }}
         aria-label={`Aumentar ${label}`}
       >
         +

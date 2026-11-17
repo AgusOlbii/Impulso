@@ -86,7 +86,7 @@ export const register = async (req, res) => {
   try {
     const { name, lastname, email, password, rol, phone, dni } = req.body;
 
-    const user = await authService.registerUser({ 
+    const created = await authService.registerUser({ 
       name,
       lastname,
       email, 
@@ -95,6 +95,8 @@ export const register = async (req, res) => {
       phone, 
       dni 
     });
+    const { token, user } = await authService.createSession(created.id);
+    res.cookie("impulso_token", token, cookieOptions);
 
     return res.status(201).json({
       ok: true,
@@ -110,6 +112,11 @@ export const register = async (req, res) => {
         message: "El correo electrónico ya se encuentra registrado",
       });
     }
+    if (error.message === "DNI_ALREADY_EXISTS") {
+      return res.status(409).json({
+        ok: false,
+        message: "El DNI ya se encuentra registrado",
+      })};
 
     console.error("Error en el registro:", error);
     return res.status(500).json({

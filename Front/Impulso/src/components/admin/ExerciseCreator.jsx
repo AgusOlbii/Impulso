@@ -70,6 +70,10 @@ function ExerciseCreator() {
       }
       await exerciseService.create(payload);
       setCreatedExercise({ name, primaryMuscle, antagonistMuscles, videoUrl });
+      setName("");
+      setPrimaryMuscle("");
+      setAntagonistMuscles([]);
+      setVideoUrl("");
       await loadExercises();
     } catch (err) {
       setError(err.message || "No se pudo crear el ejercicio.");

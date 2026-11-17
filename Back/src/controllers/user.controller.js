@@ -1,6 +1,13 @@
 import { UserModel } from "../models/user.model.js";
 import { CoachModel } from "../models/coach.model.js";
 
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax",
+  path: "/",
+};
+
 export const uploadMyPhoto = async (req, res) => {
   try {
     if (!req.file) {
@@ -67,6 +74,19 @@ export const getMyProfile = async (req, res) => {
 
 export const updateMyProfile = async (req, res) => {
   try {
+    if (req.body?.birthday) {
+      const birthday = String(req.body.birthday).split("T")[0];
+      const ahora = new Date();
+      const mes = String(ahora.getMonth() + 1).padStart(2, "0");
+      const dia = String(ahora.getDate()).padStart(2, "0");
+      const hoy = `${ahora.getFullYear()}-${mes}-${dia}`;
+      if (birthday > hoy) {
+        return res.status(400).json({
+          ok: false,
+          message: "La fecha de nacimiento no puede ser posterior a hoy",
+        });
+      }
+    }
     const updated = await UserModel.update(req.user.id, req.body || {});
     if (!updated) {
       return res.status(404).json({
@@ -116,4 +136,36 @@ export const updateUser = async (req, res) => {
             message: error.message || "Error interno del servidor",
         });
     };
+};
+
+export const deleteMyAccount = async (req, res) => {
+  try {
+    if (req.user.rol === "admin") {
+      return res.status(403).json({
+        ok: false,
+        message: "La cuenta de administrador no se puede eliminar",
+      });
+    }
+
+    const deleted = await UserModel.delete(req.user.id);
+
+    if (!deleted) {
+      return res.status(404).json({
+        ok: false,
+        message: "Usuario no encontrado para eliminar",
+      });
+    }
+
+    res.clearCookie("impulso_token", cookieOptions);
+    return res.json({
+      ok: true,
+      message: "Cuenta eliminada correctamente",
+    });
+  } catch (error) {
+    console.error("Error al eliminar la cuenta: ", error);
+    return res.status(500).json({
+      ok: false,
+      message: "Error interno del servidor",
+    });
+  }
 };

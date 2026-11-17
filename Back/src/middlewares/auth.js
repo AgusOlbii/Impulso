@@ -1,6 +1,15 @@
 import jwt from "jsonwebtoken";
+import { UserModel } from "../models/user.model.js";
 
-export function authenticateToken(req, res, next) {
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax",
+  path: "/",
+  maxAge: 60 * 60 * 1000,
+};
+
+export async function authenticateToken(req, res, next) {
   const token = req.cookies?.impulso_token;
 
   if (!token) {
@@ -11,12 +20,40 @@ export function authenticateToken(req, res, next) {
   }
 
   try {
-    req.user = jwt.verify(token, process.env.JWT_SECRET);
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await UserModel.findById(payload.id);
+
+    if (!user || !user.is_active) {
+      res.clearCookie("impulso_token", { ...cookieOptions, maxAge: undefined });
+      return res.status(401).json({
+        ok: false,
+        message: "La sesión ya no es válida",
+      });
+    }
+
+    req.user = { id: user.id, rol: user.rol };
+
+    if (payload.rol !== user.rol) {
+      const tokenNuevo = jwt.sign(
+        { id: user.id, rol: user.rol },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+      res.cookie("impulso_token", tokenNuevo, cookieOptions);
+    }
+
     next();
-  } catch {
-    return res.status(401).json({
+  } catch (error) {
+    if (error?.name === "JsonWebTokenError" || error?.name === "TokenExpiredError") {
+      return res.status(401).json({
+        ok: false,
+        message: "Sesión inválida o expirada",
+      });
+    }
+    console.error("Error al validar la sesión:", error);
+    return res.status(500).json({
       ok: false,
-      message: "Sesión inválida o expirada",
+      message: "Error interno del servidor",
     });
   }
 }

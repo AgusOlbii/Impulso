@@ -38,4 +38,6 @@ export const updateRoutineSchema = createRoutineSchema.omit({ student_id: true }
   start_date: true,
   end_date: true,
   description: true,
+}).extend({
+  exercises: z.array(routineExerciseSchema),
 });

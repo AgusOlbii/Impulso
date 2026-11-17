@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import Icon from "../common/Icon";
 import Header from "../common/Header";
 import { currentDay } from "../../utils/date.now";
-import professors from "../../data/professors";
 import { coachService } from "../../services/coach.service";
 import { mediaUrl } from "../../utils/media";
 
@@ -16,9 +15,7 @@ function initialsOf(name, lastname) {
 function Professor({ user }) {
   const navigate = useNavigate();
   const [students, setStudents] = useState([]);
-  const [perfil, setPerfil] = useState(
-    professors.find((item) => item.name.toLowerCase() === user?.name?.toLowerCase()) || null
-  );
+  const [perfil, setPerfil] = useState(null);
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [bioNotice, setBioNotice] = useState("");

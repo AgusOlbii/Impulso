@@ -112,6 +112,78 @@ static async updateRole(userId, newRole) {
     return result.affectedRows > 0;
   }
 
+  // Baja: elimina la cuenta y los datos que dependen de ese usuario
+  static async delete(userId) {
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+
+      const [userRows] = await connection.query(
+        "SELECT id FROM users WHERE id = ?",
+        [userId]
+      );
+      if (!userRows.length) {
+        await connection.rollback();
+        return false;
+      }
+
+      const [studentRows] = await connection.query(
+        "SELECT id FROM students WHERE user_id = ?",
+        [userId]
+      );
+      const studentId = studentRows[0]?.id;
+
+      const [coachRows] = await connection.query(
+        "SELECT id FROM coaches WHERE user_id = ?",
+        [userId]
+      );
+      const coachId = coachRows[0]?.id;
+
+      if (studentId) {
+        await connection.query("DELETE FROM payments WHERE student_id = ?", [studentId]);
+        await connection.query("DELETE FROM reviews WHERE student_id = ?", [studentId]);
+        await connection.query(
+          `DELETE re FROM routine_exercises re
+           INNER JOIN routines r ON r.id = re.routine_id
+           WHERE r.student_id = ?`,
+          [studentId]
+        );
+        await connection.query("DELETE FROM routines WHERE student_id = ?", [studentId]);
+        await connection.query("DELETE FROM students WHERE id = ?", [studentId]);
+      }
+
+      if (coachId) {
+        const [coachIdCol] = await connection.query("SHOW COLUMNS FROM students LIKE 'coach_id'");
+        if (coachIdCol.length) {
+          await connection.query("UPDATE students SET coach_id = NULL WHERE coach_id = ?", [coachId]);
+        }
+        await connection.query("DELETE FROM payments WHERE coach_id = ?", [coachId]);
+        await connection.query("DELETE FROM reviews WHERE coach_id = ?", [coachId]);
+        await connection.query(
+          `DELETE re FROM routine_exercises re
+           INNER JOIN routines r ON r.id = re.routine_id
+           WHERE r.coach_id = ?`,
+          [coachId]
+        );
+        await connection.query("DELETE FROM routines WHERE coach_id = ?", [coachId]);
+        await connection.query("DELETE FROM coaches WHERE id = ?", [coachId]);
+      }
+
+      await connection.query("DELETE FROM notifications WHERE user_id = ?", [userId]);
+      await connection.query("DELETE FROM coach_applications WHERE user_id = ?", [userId]);
+
+      const [result] = await connection.query("DELETE FROM users WHERE id = ?", [userId]);
+
+      await connection.commit();
+      return result.affectedRows > 0;
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
+  }
+
   // Busca los datos de la tabla user y de la tabla del rol correspondiente
   static async findByIdWithRoleData(userId) {
     //Buscamos primero los datos base del usuario en la tabla 'users'

@@ -158,7 +158,7 @@ export class RoutineModel {
         return result.affectedRows > 0;
     }
 
-    static async replace(id, { title, description, start_date, end_date, exercises }) {
+    static async replace(id, { title, description, start_date, end_date, exercises, coach_id }) {
         const connection = await pool.getConnection();
         try {
             await connection.beginTransaction();
@@ -180,6 +180,10 @@ export class RoutineModel {
                 sets.push("end_date = ?");
                 values.push(end_date);
             }
+            if (coach_id !== undefined) {
+                sets.push("coach_id = ?");
+                values.push(coach_id);
+            }
             if (sets.length) {
                 await connection.query(
                     `UPDATE routines SET ${sets.join(", ")} WHERE id = ?`,
@@ -188,20 +192,22 @@ export class RoutineModel {
             }
 
             await connection.query(`DELETE FROM routine_exercises WHERE routine_id = ?`, [id]);
-            const exerciseValues = exercises.map((item) => [
-                id,
-                item.exercise_id,
-                item.day_of_week,
-                item.target_sets,
-                item.target_reps,
-                item.target_weight || 0.00,
-            ]);
-            await connection.query(
-                `INSERT INTO routine_exercises
-                    (routine_id, exercise_id, day_of_week, target_sets, target_reps, target_weight)
-                 VALUES ?`,
-                [exerciseValues]
-            );
+            if (exercises.length) {
+                const exerciseValues = exercises.map((item) => [
+                    id,
+                    item.exercise_id,
+                    item.day_of_week,
+                    item.target_sets,
+                    item.target_reps,
+                    item.target_weight || 0.00,
+                ]);
+                await connection.query(
+                    `INSERT INTO routine_exercises
+                        (routine_id, exercise_id, day_of_week, target_sets, target_reps, target_weight)
+                     VALUES ?`,
+                    [exerciseValues]
+                );
+            }
 
             await connection.commit();
             return true;

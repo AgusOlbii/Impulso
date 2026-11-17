@@ -75,6 +75,46 @@ export const getExercises = async (req, res) => {
     }
 };
 
+
+// Actualizar un ejercicio por ID
+export const updateExercise = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const fields = req.body;
+
+        // Validar si el cuerpo de la petición está vacío
+        if (!fields || Object.keys(fields).length === 0) {
+            return res.status(400).json({
+                ok: false,
+                message: "No se proporcionaron campos para actualizar",
+            });
+        }
+
+        // Llamamos al modelo para actualizar
+        const updated = await ExerciseModel.update(id, fields);
+
+        // Si no se afectó ninguna fila, significa que el ejercicio no existe
+        if (!updated) {
+            return res.status(404).json({
+                ok: false,
+                message: "Ejercicio no encontrado",
+            });
+        }
+
+        return res.status(200).json({
+            ok: true,
+            message: "Ejercicio actualizado exitosamente",
+        });
+    } catch (error) {
+        console.error("Error al actualizar el ejercicio: ", error);
+        return res.status(500).json({
+            ok: false,
+            message: "Error interno del servidor",
+        });
+    }
+};
+
+
 // Eliminar un ejercicio por ID
 export const deleteExercise = async (req, res) => {
     try {

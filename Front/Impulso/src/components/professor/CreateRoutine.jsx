@@ -73,6 +73,7 @@ function CreateRoutine() {
     setSelected(mapped);
     setBaseline(mapped);
     setTitle(routine?.title || "");
+    if (mapped[0]?.day_of_week) setDay(mapped[0].day_of_week);
   };
 
   useEffect(() => {
@@ -169,7 +170,7 @@ function CreateRoutine() {
     }));
 
   const saveRoutine = async () => {
-    if (!studentId || selected.length === 0) return;
+    if (!studentId || (!assignedRoutine?.id && selected.length === 0)) return;
     setSaving(true);
     setError("");
     setSaved(false);
@@ -363,7 +364,7 @@ function CreateRoutine() {
           )}
           <button
             className="primary-button creator-save"
-            disabled={!isDirty || selected.length === 0 || !studentId || saving}
+            disabled={!isDirty || !studentId || saving || (!editing && selected.length === 0)}
             onClick={saveRoutine}
           >
             <Icon name="check" size={17} /> {saving ? "Guardando..." : editing ? "Guardar cambios" : "Guardar rutina"}

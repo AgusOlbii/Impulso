@@ -39,3 +39,9 @@ export const updateProfile = async (_user, formData) => {
     body: JSON.stringify(formData),
   });
 };
+
+export function deleteAccount() {
+  return request("/users/me", {
+    method: "DELETE",
+  });
+}

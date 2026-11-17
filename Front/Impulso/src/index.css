@@ -15,6 +15,121 @@
   --lime: #c8f04d;
 }
 
+/* ==========================================
+   MODO OSCURO (DARK THEME)
+   ================================---------- */
+[data-theme="dark"], .dark {
+  color: #f3f4f6;
+  background: #0b110e;
+  --ink: #f3f4f6;
+  --muted: #9ca3af;
+  --line: #1f2923;
+  --paper: #121b16;
+  --canvas: #0b110e;
+  --green: #173d32;
+  --lime: #c8f04d;
+}
+
+[data-theme="dark"] .auth-page, .dark .auth-page { background: #0b110e; }
+[data-theme="dark"] .auth-form > label > input, [data-theme="dark"] .auth-form select, [data-theme="dark"] .input-wrap,
+.dark .auth-form > label > input, .dark .auth-form select, .dark .input-wrap { background: #151f1a; border-color: #1f2923; color: var(--ink); }
+[data-theme="dark"] .auth-tabs, .dark .auth-tabs { background: #151f1a; }
+[data-theme="dark"] .auth-tabs button.active, .dark .auth-tabs button.active { background: #1c2b23; color: var(--lime); box-shadow: none; }
+[data-theme="dark"] .auth-message, .dark .auth-message { background: #172b20; color: #a3e635; }
+
+[data-theme="dark"] .outline-button, .dark .outline-button { background: #151f1a; border-color: #27352c; color: var(--ink); }
+[data-theme="dark"] .outline-button:hover, .dark .outline-button:hover { background: #1c2b23; }
+
+[data-theme="dark"] .stat-icon, .dark .stat-icon { background: #18261e; color: var(--lime); }
+[data-theme="dark"] .date-strip, .dark .date-strip { background: #121b16; border-color: #1f2923; }
+[data-theme="dark"] .date-strip button, .dark .date-strip button { background: #121b16; border-color: #1f2923; color: var(--muted); }
+[data-theme="dark"] .date-strip button.selected, .dark .date-strip button.selected { background: var(--green); color: white; }
+
+[data-theme="dark"] .filter, .dark .filter { border-color: #27352c; color: var(--muted); background: #121b16; }
+[data-theme="dark"] .filter.active, .dark .filter.active { color: var(--green); background: var(--lime); border-color: var(--lime); }
+
+[data-theme="dark"] .class-row, .dark .class-row,
+[data-theme="dark"] .assigned-routine, .dark .assigned-routine,
+[data-theme="dark"] .routine-day, .dark .routine-day,
+[data-theme="dark"] .exercise, .dark .exercise,
+[data-theme="dark"] .profile-section, .dark .profile-section,
+[data-theme="dark"] .plan-panel, .dark .plan-panel,
+[data-theme="dark"] .settings-list button, .dark .settings-list button,
+[data-theme="dark"] .routine-builder, .dark .routine-builder,
+[data-theme="dark"] .professor-stats article, .dark .professor-stats article,
+[data-theme="dark"] .students-panel, .dark .students-panel, .today-panel,
+[data-theme="dark"] .admin-kpis article, .dark .admin-kpis article,
+[data-theme="dark"] .revenue-panel, .dark .membership-panel, .dark .applications-panel, .dark .professors-panel, .dark .exercise-preview-panel,
+[data-theme="dark"] .application-row, .dark .application-row,
+[data-theme="dark"] .coach-card, .dark .coach-card,
+[data-theme="dark"] .apply-card, .dark .apply-card,
+[data-theme="dark"] .exercise-library-panel, .selected-exercises-panel,
+[data-theme="dark"] .exercise-create-form, .exercise-preview-panel,
+[data-theme="dark"] .exercise-catalog, .students-directory-panel,
+[data-theme="dark"] .confirm-modal, .dark .confirm-modal { background: #121b16; border-color: #1f2923; color: var(--ink); }
+
+[data-theme="dark"] .routine-day.active, .dark .routine-day.active { background: var(--lime); color: var(--green); border-color: var(--lime); }
+[data-theme="dark"] .exercise.done, .dark .exercise.done { background: #16241b; }
+[data-theme="dark"] .exercise-number, .dark .exercise-number { background: #192720; color: var(--lime); }
+[data-theme="dark"] .muscle, .dark .muscle { background: #18261e; color: var(--muted); }
+[data-theme="dark"] .coach-note, .dark .coach-note { background: #16261d; }
+[data-theme="dark"] .info-grid div, .dark .info-grid div { border-color: #1f2923; }
+[data-theme="dark"] .info-grid div:nth-child(odd), .dark .info-grid div:nth-child(odd) { border-right-color: #1f2923; }
+[data-theme="dark"] .setting-icon, .dark .setting-icon { background: #18261e; color: var(--lime); }
+[data-theme="dark"] .builder-fields select, .builder-fields input,
+[data-theme="dark"] .confirm-modal input, .student-note-form textarea,
+[data-theme="dark"] .apply-form input, .apply-form select, .apply-form textarea,
+[data-theme="dark"] .exercise-search, .exercise-search input,
+[data-theme="dark"] .create-field > input, .create-field > select, .video-url-field > div,
+[data-theme="dark"] .students-search, .students-search input,
+.dark .builder-fields select, .dark .builder-fields input,
+.dark .confirm-modal input, .dark .student-note-form textarea,
+.dark .apply-form input, .dark .apply-form select, .dark .apply-form textarea,
+.dark .exercise-search, .dark .exercise-search input,
+.dark .create-field > input, .dark .create-field > select, .dark .video-url-field > div,
+.dark .students-search, .dark .students-search input { background: #17241e; border-color: #24342a; color: var(--ink); }
+
+[data-theme="dark"] .builder-exercises > div, .dark .builder-exercises > div { background: #151f1a; border-color: #1f2923; }
+[data-theme="dark"] .exercise-order, .dark .exercise-order { background: #18261e; color: var(--lime); }
+[data-theme="dark"] .success-message, .dark .success-message { background: #15281c; color: #a3e635; }
+[data-theme="dark"] .membership-donut::before, .dark .membership-donut::before { background: #121b16; }
+[data-theme="dark"] .reject-button, .delete-button, .dark .reject-button, .dark .delete-button { background: #261a18; border-color: #3b2421; }
+[data-theme="dark"] .coach-available, .dark .coach-available { background: rgba(18, 27, 22, 0.9); color: var(--ink); }
+[data-theme="dark"] .muscle-options button, .dark .muscle-options button { background: #151f1a; border-color: #24342a; color: var(--muted); }
+[data-theme="dark"] .muscle-options button.selected, .dark .muscle-options button.selected { background: var(--green); border-color: var(--green); color: white; }
+[data-theme="dark"] .selected-exercise, .dark .selected-exercise { background: #16221c; border-color: #203127; }
+[data-theme="dark"] .stepper, .dark .stepper { background: #17241e; border-color: #24342a; }
+[data-theme="dark"] .stepper button, .dark .stepper button { background: #1c2b23; color: var(--lime); }
+[data-theme="dark"] .stepper input, .dark .stepper input { background: #17241e; color: var(--ink); }
+[data-theme="dark"] .students-table-head, .dark .students-table-head { background: #16221c; color: var(--muted); }
+
+
+
+
+[data-theme="dark"] .coach-filters .filter, 
+.dark .coach-filters .filter {
+  background: #121b16;
+  border-color: #1f2923;
+  color: var(--muted);
+}
+
+[data-theme="dark"] .coach-filters .filter.active, 
+.dark .coach-filters .filter.active {
+  background: var(--lime);
+  color: var(--green);
+  border-color: var(--lime);
+}
+
+
+
+
+
+
+
+
+
+/* ========================================== */
+
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; min-height: 100vh; }
 button { font: inherit; }
@@ -244,7 +359,7 @@ h1 { margin-bottom: 0; font-size: 30px; line-height: 1.1; letter-spacing: -.04em
 .plan-dates span, .plan-dates strong { display: block; }
 .plan-dates span { color: var(--muted); font-size: 7px; margin-bottom: 5px; }
 .plan-dates strong { font-size: 9px; }
-.settings-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 18px; }
+.settings-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 18px; }
 .settings-list button { border: 1px solid var(--line); border-radius: 13px; background: white; display: grid; grid-template-columns: auto 1fr auto; gap: 11px; align-items: center; padding: 16px; text-align: left; color: var(--ink); cursor: pointer; }
 .setting-icon { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: #eff1ee; }
 .settings-list strong, .settings-list small { display: block; }
@@ -799,4 +914,3 @@ h1 { margin-bottom: 0; font-size: 30px; line-height: 1.1; letter-spacing: -.04em
   .student-detail-drawer > div:not(.student-detail-name) { grid-column: span 2; }
   .student-detail-drawer > div:nth-of-type(4), .student-detail-drawer .primary-button { grid-column: span 2; }
 }
-

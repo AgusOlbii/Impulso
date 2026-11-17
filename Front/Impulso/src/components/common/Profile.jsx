@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import Icon from "./Icon";
 import Header from "./Header";
-import { updateProfile, uploadPhoto } from "../../services/authServices";
-import demoProfessors from "../../data/professors";
+import { deleteAccount, updateProfile, uploadPhoto } from "../../services/authServices";
 import { mediaUrl } from "../../utils/media";
 import { coachService } from "../../services/coach.service";
 import { reviewService } from "../../services/review.service";
@@ -14,9 +13,9 @@ function Profile({ user, setUser, onLogout, profesorElegidoId }) {
   const [myRating, setMyRating] = useState(0);
   const [ratingNotice, setRatingNotice] = useState("");
   const profesor = esAlumno
-    ? [...approved, ...demoProfessors].find((item) => Number(item.id) === Number(profesorElegidoId))
+    ? approved.find((item) => Number(item.id) === Number(profesorElegidoId))
     : null;
-  const puedeCalificar = Boolean(profesor && Number(profesor.id) < 9000);
+  const puedeCalificar = Boolean(profesor);
 
   useEffect(() => {
     if (!esAlumno) return;
@@ -39,6 +38,9 @@ function Profile({ user, setUser, onLogout, profesorElegidoId }) {
   const [isEditing, setIsEditing] = useState(false);
   const [photoError, setPhotoError] = useState("");
   const [saveError, setSaveError] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
   const [formData, setFormData] = useState({
     phone: user.phone || "",
     birthday: user.birthday ? user.birthday.split("T")[0] : "",
@@ -75,6 +77,20 @@ function Profile({ user, setUser, onLogout, profesorElegidoId }) {
 
   const initials = `${(user.name?.[0] || "U").toUpperCase()}${(user.lastname?.[0] || "").toUpperCase()}`;
   const photoSrc = mediaUrl(user.image_url);
+
+  const handleDeleteAccount = async () => {
+    setDeleteError("");
+    setDeleting(true);
+    try {
+      await deleteAccount();
+      setConfirmDelete(false);
+      onLogout();
+    } catch (error) {
+      setDeleteError(error.message || "No se pudo eliminar la cuenta.");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const handlePhoto = async (event) => {
     const file = event.target.files?.[0];
@@ -309,26 +325,18 @@ function Profile({ user, setUser, onLogout, profesorElegidoId }) {
         )}
       </div>
       <div className="settings-list">
-        <button>
-          <span className="setting-icon">
-            <Icon name="bell" />
-          </span>
-          <span>
-            <strong>Notificaciones</strong>
-            <small>Recordatorios y mensajes</small>
-          </span>
-          <Icon name="arrow" />
-        </button>
-        <button>
-          <span className="setting-icon">
-            <Icon name="settings" />
-          </span>
-          <span>
-            <strong>Preferencias</strong>
-            <small>Privacidad y configuración de la cuenta</small>
-          </span>
-          <Icon name="arrow" />
-        </button>
+        {user.rol !== "admin" && (
+          <button className="danger" type="button" onClick={() => { setDeleteError(""); setConfirmDelete(true); }}>
+            <span className="setting-icon">
+              <Icon name="trash" />
+            </span>
+            <span>
+              <strong>Eliminar cuenta</strong>
+              <small>Borrar tu cuenta de Impulso</small>
+            </span>
+            <Icon name="arrow" />
+          </button>
+        )}
         <button className="danger" onClick={onLogout}>
           <span className="setting-icon">
             <Icon name="logout" />
@@ -340,6 +348,30 @@ function Profile({ user, setUser, onLogout, profesorElegidoId }) {
           <Icon name="arrow" />
         </button>
       </div>
+      {confirmDelete && (
+        <div className="confirm-overlay" onClick={() => !deleting && setConfirmDelete(false)}>
+          <div
+            className="confirm-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirm-delete-account"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <span className="eyebrow">ELIMINAR CUENTA</span>
+            <h3 id="confirm-delete-account">¿Eliminar tu cuenta?</h3>
+            <p>Se van a borrar tus datos de Impulso. Esta acción no se puede deshacer.</p>
+            {deleteError && <p className="apply-error">{deleteError}</p>}
+            <div className="confirm-actions">
+              <button type="button" className="text-button" onClick={() => setConfirmDelete(false)} disabled={deleting}>
+                Cancelar
+              </button>
+              <button type="button" className="primary-button" onClick={handleDeleteAccount} disabled={deleting}>
+                {deleting ? "Eliminando..." : "Eliminar cuenta"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

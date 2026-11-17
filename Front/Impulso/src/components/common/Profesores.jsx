@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import Header from "./Header";
 import Icon from "./Icon";
-import demoProfessors from "../../data/professors";
 import estadoEleccion from "../../config/reglasProfesor";
 import { coachService } from "../../services/coach.service";
 import { mediaUrl } from "../../utils/media";
@@ -62,7 +61,7 @@ function Profesores({ user, profesorElegidoId, onElegir, onDejar }) {
   const [approved, setApproved] = useState([]);
   const [myRating, setMyRating] = useState(0);
   const copy = contentByRol[user?.rol] || contentByRol.student;
-  const professors = [...approved, ...demoProfessors];
+  const professors = approved;
   const socio = { id: user?.id, profesorId: profesorElegidoId };
   const profesorActual = professors.find((item) => item.id === profesorElegidoId);
   const visibleCoaches =
@@ -98,7 +97,7 @@ function Profesores({ user, profesorElegidoId, onElegir, onDejar }) {
   }, []);
 
   useEffect(() => {
-    if (!profesorElegidoId || Number(profesorElegidoId) >= 9000) {
+    if (!profesorElegidoId) {
       setMyRating(0);
       return;
     }
@@ -263,7 +262,7 @@ function Profesores({ user, profesorElegidoId, onElegir, onDejar }) {
                     </button>
                   )}
                 </div>
-                {copy.showHireButton && estado === "ya_elegido" && Number(coach.id) < 9000 && (
+                {copy.showHireButton && estado === "ya_elegido" && (
                   <div className="coach-rate">
                     <span>Calificar</span>
                     <RatingStars

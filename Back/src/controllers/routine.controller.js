@@ -150,7 +150,17 @@ export const updateRoutine = async (req, res) => {
             });
         }
         const routine = await RoutineModel.findById(req.params.id);
-        if (!routine || Number(routine.coach_id) !== Number(coach.id)) {
+        if (!routine) {
+            return res.status(404).json({
+                ok: false,
+                message: "Rutina no encontrada",
+            });
+        }
+        await StudentModel.ensureCoachColumn();
+        const student = await StudentModel.findById(routine.student_id);
+        const esSuya = Number(routine.coach_id) === Number(coach.id);
+        const esSuAlumno = Boolean(student && Number(student.coach_id) === Number(coach.id));
+        if (!esSuya && !esSuAlumno) {
             return res.status(403).json({
                 ok: false,
                 message: "No podés modificar esa rutina",
@@ -163,6 +173,7 @@ export const updateRoutine = async (req, res) => {
             start_date,
             end_date,
             exercises,
+            coach_id: coach.id,
         });
         return res.status(200).json({
             ok: true,

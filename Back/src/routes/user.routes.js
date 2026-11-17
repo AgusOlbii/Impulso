@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getMyProfile, updateMyProfile, updateUser, uploadMyPhoto } from "../controllers/user.controller.js";
+import { deleteMyAccount, getMyProfile, updateMyProfile, updateUser, uploadMyPhoto } from "../controllers/user.controller.js";
 import { authenticateToken } from "../middlewares/auth.js";
 import { uploadPhoto } from "../middlewares/upload.js";
 
@@ -15,6 +15,7 @@ router.post("/me/photo", authenticateToken, (req, res, next) => {
 }, uploadMyPhoto);
 
 router.put("/me", authenticateToken, updateMyProfile);
+router.delete("/me", authenticateToken, deleteMyAccount);
 router.get("/:id", getMyProfile);
 router.put("/:id/update", authenticateToken, updateUser);
 export default router;

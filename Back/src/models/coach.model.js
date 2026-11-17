@@ -49,12 +49,11 @@ export class CoachModel {
      LEFT JOIN (
        SELECT student_id, COUNT(*) AS routine_count
        FROM routines
-       WHERE coach_id = ?
        GROUP BY student_id
      ) rt ON rt.student_id = s.id
      WHERE s.coach_id = ?
      ORDER BY u.name ASC`,
-    [coach_id, coach_id]
+    [coach_id]
   );
   return rows;
 }

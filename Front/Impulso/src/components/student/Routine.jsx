@@ -12,6 +12,22 @@ function currentValue(exercise, actualKey, targetKey) {
   return asNumber(exercise[actualKey]) ?? asNumber(exercise[targetKey]) ?? 0;
 }
 
+function normalizeRoutine(routine) {
+  if (!routine) return null;
+  return {
+    ...routine,
+    exercises: (routine.exercises || []).map((exercise) => ({
+      ...exercise,
+      target_sets: asNumber(exercise.target_sets) ?? 0,
+      target_reps: asNumber(exercise.target_reps) ?? 0,
+      target_weight: asNumber(exercise.target_weight) ?? 0,
+      actual_sets: asNumber(exercise.actual_sets),
+      actual_reps: asNumber(exercise.actual_reps),
+      actual_weight: asNumber(exercise.actual_weight),
+    })),
+  };
+}
+
 function Routine({ user, profesorElegidoId }) {
   const navigate = useNavigate();
   const [routine, setRoutine] = useState(null);
@@ -21,6 +37,7 @@ function Routine({ user, profesorElegidoId }) {
   const [edits, setEdits] = useState({});
   const [notice, setNotice] = useState("");
   const [saving, setSaving] = useState(false);
+  const [editGeneration, setEditGeneration] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -29,7 +46,7 @@ function Routine({ user, profesorElegidoId }) {
       coachService.list().catch(() => ({ coaches: [] })),
     ]).then(([routineData, coachData]) => {
       if (!active) return;
-      setRoutine(routineData.routine || null);
+      setRoutine(normalizeRoutine(routineData.routine));
       const coaches = coachData.coaches || [];
       setProfesor(
         coaches.find((item) => Number(item.id) === Number(profesorElegidoId || user?.coach_id)) || null,
@@ -89,7 +106,9 @@ function Routine({ user, profesorElegidoId }) {
     const edited = edits[String(exercise.routine_exercise_id)];
     if (!edited) return false;
     const baseline = baselineOf(exercise);
-    return edited.sets !== baseline.sets || edited.reps !== baseline.reps || edited.weight !== baseline.weight;
+    return Number(edited.sets) !== Number(baseline.sets)
+      || Number(edited.reps) !== Number(baseline.reps)
+      || Number(edited.weight) !== Number(baseline.weight);
   });
 
   const saveDay = async () => {
@@ -97,18 +116,26 @@ function Routine({ user, profesorElegidoId }) {
     setSaving(true);
     setNotice("");
     try {
+      const savedIds = new Set(dirtyExercises.map((exercise) => String(exercise.routine_exercise_id)));
       await Promise.all(
         dirtyExercises.map((exercise) =>
           routineService.saveProgress(exercise.routine_exercise_id, {
-            actual_sets: valueOf(exercise, "sets"),
-            actual_reps: valueOf(exercise, "reps"),
-            actual_weight: valueOf(exercise, "weight"),
+            actual_sets: Number(valueOf(exercise, "sets")) || 0,
+            actual_reps: Number(valueOf(exercise, "reps")) || 0,
+            actual_weight: Number(valueOf(exercise, "weight")) || 0,
           }),
         ),
       );
       const data = await routineService.mine();
-      setRoutine(data.routine || null);
-      setEdits({});
+      setRoutine(normalizeRoutine(data.routine));
+      setEdits((current) => {
+        const next = {};
+        for (const [key, value] of Object.entries(current)) {
+          if (!savedIds.has(key)) next[key] = value;
+        }
+        return next;
+      });
+      setEditGeneration((value) => value + 1);
       setNotice("Guardamos tus cambios. Tu profesor va a ver el aviso, sin modificar lo que te asignó.");
     } catch (error) {
       setNotice(error.message || "No se pudieron guardar los cambios.");
@@ -216,6 +243,7 @@ function Routine({ user, profesorElegidoId }) {
                     <div>
                       <label>SERIES</label>
                       <StepperField
+                        key={`sets-${exercise.routine_exercise_id}-${editGeneration}`}
                         label={`series de ${exercise.name}`}
                         value={valueOf(exercise, "sets")}
                         onStep={(amount) => updateEdit(exercise, "sets", amount)}
@@ -225,6 +253,7 @@ function Routine({ user, profesorElegidoId }) {
                     <div>
                       <label>REPETICIONES</label>
                       <StepperField
+                        key={`reps-${exercise.routine_exercise_id}-${editGeneration}`}
                         label={`repeticiones de ${exercise.name}`}
                         value={valueOf(exercise, "reps")}
                         onStep={(amount) => updateEdit(exercise, "reps", amount)}
@@ -234,6 +263,7 @@ function Routine({ user, profesorElegidoId }) {
                     <div>
                       <label>PESO</label>
                       <StepperField
+                        key={`weight-${exercise.routine_exercise_id}-${editGeneration}`}
                         label={`peso de ${exercise.name}`}
                         decimal
                         value={valueOf(exercise, "weight")}
@@ -244,7 +274,7 @@ function Routine({ user, profesorElegidoId }) {
                   </div>
                 </article>
               ))}
-              <button className="primary-button creator-save" disabled={saving || dirtyExercises.length === 0} onClick={saveDay}>
+              <button type="button" className="primary-button creator-save" disabled={saving || dirtyExercises.length === 0} onClick={saveDay}>
                 <Icon name="check" size={17} /> {saving ? "Guardando..." : "Guardar cambios"}
               </button>
             </div>

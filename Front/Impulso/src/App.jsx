@@ -20,10 +20,7 @@ import {
   logout,
   register,
 } from "./services/authServices";
-import {
-  leerProfesorElegido,
-  guardarProfesorElegido,
-} from "./data/eleccionProfesor";
+import { guardarProfesorElegido } from "./data/eleccionProfesor";
 import { coachService } from "./services/coach.service";
 
 export default function App() {
@@ -60,31 +57,19 @@ export default function App() {
       guardarProfesorElegido(user.id, user.coach_id);
       return;
     }
-    const guardado = leerProfesorElegido(user.id);
-    if (guardado && Number(guardado) >= 9000) {
-      setProfesorElegidoId(guardado);
-      return;
-    }
     setProfesorElegidoId(null);
     guardarProfesorElegido(user.id, null);
   }, [user?.id, user?.rol, user?.coach_id]);
 
   const elegirProfesor = async (profesorId) => {
-    if (Number(profesorId) >= 9000) {
-      if (user.coach_id && Number(user.coach_id) < 9000) {
-        await coachService.leave();
-        setUser((actual) => ({ ...actual, coach_id: null }));
-      }
-    } else {
-      await coachService.hire(profesorId);
-      setUser((actual) => ({ ...actual, coach_id: profesorId }));
-    }
+    await coachService.hire(profesorId);
+    setUser((actual) => ({ ...actual, coach_id: profesorId }));
     setProfesorElegidoId(profesorId);
     guardarProfesorElegido(user.id, profesorId);
   };
 
   const dejarProfesor = async () => {
-    if (user.coach_id && Number(user.coach_id) < 9000) {
+    if (user.coach_id) {
       await coachService.leave();
       setUser((actual) => ({ ...actual, coach_id: null }));
     }
